@@ -23,6 +23,7 @@ async def create_rule(
     *,
     name: str,
     description: str | None = None,
+    instruction: str | None = None,
     trigger_type: str | None = None,
     trigger_config: dict[str, Any] | None = None,
     steps: list[Any] | None = None,
@@ -32,6 +33,7 @@ async def create_rule(
     rule = Rule(
         name=name,
         description=description,
+        instruction=instruction,
         trigger_type=trigger_type,
         trigger_config=trigger_config,
         steps=steps,

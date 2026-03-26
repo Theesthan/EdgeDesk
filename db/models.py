@@ -39,6 +39,7 @@ class Rule(Base):
     # time_cron | file_event | manual
     trigger_type: Mapped[str | None] = mapped_column(String, nullable=True)
     trigger_config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    instruction: Mapped[str | None] = mapped_column(Text, nullable=True)
     steps: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     success_rate: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)

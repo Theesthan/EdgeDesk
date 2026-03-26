@@ -705,7 +705,7 @@ ignore_missing_imports = true
 
 ---
 
-### Phase 5 — Scheduler + Rules Engine `[ NOT STARTED ]`
+### Phase 5 — Scheduler + Rules Engine `[ COMPLETE ✓ ]`
 
 **Goal:** APScheduler wired to SQLite rules. Three trigger types: cron, file-watch, manual.
 
@@ -735,11 +735,11 @@ ignore_missing_imports = true
 
 **Exit criteria:**
 
-- [ ] `uv run pytest tests/test_scheduler.py -v` — all pass
+- [x] `uv run pytest tests/test_scheduler.py -v` — all pass (25/25)
 
-- [ ] Cron job fires at correct time using `freeze_time` in tests
+- [x] Cron job fires at correct time using explicit `now` param on `get_next_fire_time()` (freeze_time equivalent, no extra dep)
 
-- [ ] Every job fire creates an execution record in DB
+- [x] Every job fire creates an execution record in DB
 
 **Next →** Phase 6: UI Design System
 
@@ -998,7 +998,7 @@ Phase 1  — Scaffold            [ COMPLETE ✓ ]
 Phase 2  — Data Layer          [ COMPLETE ✓ ]
 Phase 3  — Core Agent          [ COMPLETE ✓ ]
 Phase 4  — Desktop Tools       [ COMPLETE ✓ ]
-Phase 5  — Scheduler + Rules   [ NOT STARTED ]
+Phase 5  — Scheduler + Rules   [ COMPLETE ✓ ]
 Phase 6  — UI Design System    [ NOT STARTED ]
 Phase 7  — Command Overlay     [ NOT STARTED ]
 Phase 8  — Management Panels   [ NOT STARTED ]
