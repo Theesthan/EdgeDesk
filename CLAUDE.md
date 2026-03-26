@@ -599,7 +599,7 @@ ignore_missing_imports = true
 
 ---
 
-### Phase 3 — Core Agent: LLM + ReAct + Memory `[ NOT STARTED ]`
+### Phase 3 — Core Agent: LLM + ReAct + Memory `[ COMPLETE ✓ ]`
 
 **Goal:** A working LangChain ReAct agent that reasons through instructions using mock tools. No real GUI automation yet.
 
@@ -647,11 +647,15 @@ ignore_missing_imports = true
 
 **Exit criteria:**
 
-- [ ] `uv run pytest tests/test_agent.py -v` — all pass with mock LLM
+- [x] `uv run pytest tests/test_agent.py -v` — all pass with mock LLM (26/26)
 
-- [ ] Ollama health check raises `ConnectionError` correctly when Ollama is offline
+- [x] Ollama health check raises `ConnectionError` correctly when Ollama is offline
 
-- [ ] Streaming works: tokens emitted one-by-one via async iterator
+- [x] Streaming works: tokens emitted one-by-one via async iterator
+
+> **Note:** `langgraph.prebuilt.create_react_agent` is deprecated in langgraph v1.0+. The new
+> location is `langchain.agents.create_agent` but its signature differs. Current code uses the
+> deprecated shim (still fully functional). Migrate in Phase 9 if langgraph v2 is released.
 
 **Next →** Phase 4: Desktop Tools
 
@@ -992,7 +996,7 @@ ignore_missing_imports = true
 ```text
 Phase 1  — Scaffold            [ COMPLETE ✓ ]
 Phase 2  — Data Layer          [ COMPLETE ✓ ]
-Phase 3  — Core Agent          [ NOT STARTED ]
+Phase 3  — Core Agent          [ COMPLETE ✓ ]
 Phase 4  — Desktop Tools       [ NOT STARTED ]
 Phase 5  — Scheduler + Rules   [ NOT STARTED ]
 Phase 6  — UI Design System    [ NOT STARTED ]

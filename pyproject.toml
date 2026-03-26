@@ -43,6 +43,10 @@ dev = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning:langgraph",
+    "ignore::langchain_core._api.deprecation.LangChainDeprecationWarning",
+]
 
 [tool.ruff]
 line-length = 100
