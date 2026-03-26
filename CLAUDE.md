@@ -897,7 +897,7 @@ ignore_missing_imports = true
 
 ---
 
-### Phase 9 — Full Integration & main.py `[ NOT STARTED ]`
+### Phase 9 — Full Integration & main.py `[ COMPLETE ✓ ]`
 
 **Goal:** Wire every component together in a single boot sequence using `qasync`.
 
@@ -939,13 +939,13 @@ ignore_missing_imports = true
 
 **Exit criteria:**
 
-- [ ] `uv run python main.py` launches to tray without crash
+- [x] `uv run python main.py` launches to tray without crash
 
-- [ ] `Alt+Space` opens overlay
+- [x] `Alt+Space` opens overlay
 
-- [ ] Instruction → token stream → step pills → execution in history view
+- [x] Instruction → token stream → step pills → execution in history view
 
-- [ ] Clean shutdown on tray "Quit"
+- [x] Clean shutdown on tray "Quit"
 
 **Next →** Phase 10: Polish + Packaging
 
@@ -1002,7 +1002,7 @@ Phase 5  — Scheduler + Rules   [ COMPLETE ✓ ]
 Phase 6  — UI Design System    [ COMPLETE ✓ ]
 Phase 7  — Command Overlay     [ COMPLETE ✓ ]
 Phase 8  — Management Panels   [ COMPLETE ✓ ]
-Phase 9  — Full Integration    [ NOT STARTED ]
+Phase 9  — Full Integration    [ COMPLETE ✓ ]
 Phase 10 — Polish + Packaging  [ NOT STARTED ]
 ```
 
