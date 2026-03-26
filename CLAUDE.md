@@ -785,7 +785,7 @@ ignore_missing_imports = true
 
 ---
 
-### Phase 7 — Command Overlay (ui/overlay.py) `[ NOT STARTED ]`
+### Phase 7 — Command Overlay (ui/overlay.py) `[ COMPLETE ✓ ]`
 
 **Goal:** The core UX. Frameless glass window on `Alt+Space`, streams agent output as step pills, dismisses on `Esc` or click-outside.
 
@@ -825,13 +825,13 @@ ignore_missing_imports = true
 
 **Exit criteria:**
 
-- [ ] Opens on `Alt+Space` (hotkey registered in `main.py`)
+- [x] Opens on `Alt+Space` (hotkey registered via `core/hotkey.py` `HotkeyManager`)
 
-- [ ] Typing + Enter emits signal with correct instruction text
+- [x] Typing + Enter emits signal with correct instruction text
 
-- [ ] Step pills appear, pulse while running, turn green/red on done/failed
+- [x] Step pills appear, pulse while running, turn green/red on done/failed
 
-- [ ] Dismisses cleanly on `Esc` and click-outside
+- [x] Dismisses cleanly on `Esc` and click-outside
 
 **Next →** Phase 8: Management Panels
 
@@ -1000,7 +1000,7 @@ Phase 3  — Core Agent          [ COMPLETE ✓ ]
 Phase 4  — Desktop Tools       [ COMPLETE ✓ ]
 Phase 5  — Scheduler + Rules   [ COMPLETE ✓ ]
 Phase 6  — UI Design System    [ COMPLETE ✓ ]
-Phase 7  — Command Overlay     [ NOT STARTED ]
+Phase 7  — Command Overlay     [ COMPLETE ✓ ]
 Phase 8  — Management Panels   [ NOT STARTED ]
 Phase 9  — Full Integration    [ NOT STARTED ]
 Phase 10 — Polish + Packaging  [ NOT STARTED ]
