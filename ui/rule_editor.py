@@ -20,13 +20,6 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-try:
-    import qtawesome as qta  # type: ignore[import]
-
-    _QTA = True
-except ImportError:
-    _QTA = False
-
 from ui.styles.components import AccentButton, GlassCard, ToggleSwitch
 from ui.styles.qss import input_field_qss, scrollbar_qss
 from ui.styles.theme import (
@@ -52,7 +45,7 @@ from ui.styles.theme import (
 _TRIGGER_LABELS: dict[str, str] = {
     "time_cron": "Cron",
     "file_event": "File",
-    "manual":     "Manual",
+    "manual": "Manual",
 }
 
 _COMBO_QSS: str = (
@@ -112,9 +105,7 @@ class RuleCard(GlassCard):
         info.setSpacing(4)
 
         name_lbl = QLabel(str(rule_data.get("name", "Unnamed")), self)
-        name_lbl.setStyleSheet(
-            f"color: {TEXT_PRIMARY}; font-size: {FONT_SIZE_BODY}px;"
-        )
+        name_lbl.setStyleSheet(f"color: {TEXT_PRIMARY}; font-size: {FONT_SIZE_BODY}px;")
 
         trigger_type = str(rule_data.get("trigger_type", "manual"))
         badge = QLabel(_TRIGGER_LABELS.get(trigger_type, trigger_type), self)
@@ -130,16 +121,12 @@ class RuleCard(GlassCard):
         # Run count
         run_count = rule_data.get("run_count", 0)
         count_lbl = QLabel(f"{run_count} runs", self)
-        count_lbl.setStyleSheet(
-            f"color: {TEXT_TERTIARY}; font-size: {FONT_SIZE_CAPTION}px;"
-        )
+        count_lbl.setStyleSheet(f"color: {TEXT_TERTIARY}; font-size: {FONT_SIZE_CAPTION}px;")
 
         # Toggle switch
         self._toggle = ToggleSwitch(parent=self)
         self._toggle.setChecked(bool(rule_data.get("enabled", True)))
-        self._toggle.toggled.connect(
-            lambda checked: self.toggled.emit(self._rule_id, checked)
-        )
+        self._toggle.toggled.connect(lambda checked: self.toggled.emit(self._rule_id, checked))
 
         layout.addLayout(info, 1)
         layout.addWidget(count_lbl)
@@ -248,9 +235,7 @@ class RuleDetailEditor(QWidget):
 
     def _cap(self, text: str) -> QLabel:
         lbl = QLabel(text, self)
-        lbl.setStyleSheet(
-            f"color: {TEXT_SECONDARY}; font-size: {FONT_SIZE_CAPTION}px;"
-        )
+        lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; font-size: {FONT_SIZE_CAPTION}px;")
         return lbl
 
     def _on_save(self) -> None:
@@ -305,9 +290,7 @@ class RuleManagerPanel(QWidget):
         # Left panel
         left = QWidget(self)
         left.setFixedWidth(320)
-        left.setStyleSheet(
-            f"background: {BG_SURFACE}; border-right: 1px solid {GLASS_BORDER};"
-        )
+        left.setStyleSheet(f"background: {BG_SURFACE}; border-right: 1px solid {GLASS_BORDER};")
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(SPACE_4, SPACE_4, SPACE_4, SPACE_4)
         left_layout.setSpacing(SPACE_2)
@@ -344,13 +327,9 @@ class RuleManagerPanel(QWidget):
         self._right.setStyleSheet(f"background: {BG_PRIMARY};")
         main.addWidget(self._right, 1)
 
-        self._empty_lbl = QLabel(
-            "Select a rule to edit,\nor create a new one.", self._right
-        )
+        self._empty_lbl = QLabel("Select a rule to edit,\nor create a new one.", self._right)
         self._empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._empty_lbl.setStyleSheet(
-            f"color: {TEXT_TERTIARY}; font-size: {FONT_SIZE_BODY}px;"
-        )
+        self._empty_lbl.setStyleSheet(f"color: {TEXT_TERTIARY}; font-size: {FONT_SIZE_BODY}px;")
 
         self._detail = RuleDetailEditor(self._right)
         self._detail.saved.connect(self.rule_saved)
@@ -375,9 +354,7 @@ class RuleManagerPanel(QWidget):
             card = RuleCard(rule_data, parent=self._cards_container)
             card.clicked.connect(self._on_card_clicked)
             card.toggled.connect(self.rule_toggled)
-            self._cards_layout.insertWidget(
-                max(0, self._cards_layout.count() - 1), card
-            )
+            self._cards_layout.insertWidget(max(0, self._cards_layout.count() - 1), card)
 
     # -- Qt overrides --------------------------------------------------------
 

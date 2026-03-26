@@ -48,7 +48,9 @@ class ClipboardTool(BaseTool):
                 return ToolError(tool="clipboard", message=f"Invalid input: {exc}", retryable=False)
             return self._write(inp)
         else:
-            return ToolError(tool="clipboard", message=f"Unknown action: {action!r}", retryable=False)
+            return ToolError(
+                tool="clipboard", message=f"Unknown action: {action!r}", retryable=False
+            )
 
     async def _arun(self, **kwargs: Any) -> Any:  # type: ignore[override]
         return self._run(**kwargs)

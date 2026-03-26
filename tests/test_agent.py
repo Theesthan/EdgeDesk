@@ -47,9 +47,7 @@ class MockChatModel(BaseChatModel):
         run_manager: Any = None,
         **kwargs: Any,
     ) -> ChatResult:
-        return ChatResult(
-            generations=[ChatGeneration(message=AIMessage(content=self.response))]
-        )
+        return ChatResult(generations=[ChatGeneration(message=AIMessage(content=self.response))])
 
 
 class MockStreamingChatModel(BaseChatModel):
@@ -68,9 +66,7 @@ class MockStreamingChatModel(BaseChatModel):
         run_manager: Any = None,
         **kwargs: Any,
     ) -> ChatResult:
-        return ChatResult(
-            generations=[ChatGeneration(message=AIMessage(content=self.response))]
-        )
+        return ChatResult(generations=[ChatGeneration(message=AIMessage(content=self.response))])
 
     def _stream(
         self,
@@ -302,9 +298,7 @@ async def test_agent_session_id() -> None:
 
 
 async def test_planner_parses_numbered_list() -> None:
-    mock_llm = MockChatModel(
-        response="1. Open Notepad\n2. Type the text\n3. Save the file"
-    )
+    mock_llm = MockChatModel(response="1. Open Notepad\n2. Type the text\n3. Save the file")
     planner = TaskPlanner(mock_llm)
     steps = await planner.decompose("Write and save a note")
     assert len(steps) == 3

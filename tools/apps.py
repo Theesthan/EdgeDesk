@@ -52,12 +52,16 @@ class AppTool(BaseTool):
             try:
                 inp = AppLaunchInput(**kwargs)
             except Exception as exc:
-                return ToolError(tool="app_control", message=f"Invalid input: {exc}", retryable=False)
+                return ToolError(
+                    tool="app_control", message=f"Invalid input: {exc}", retryable=False
+                )
             return self._launch(inp)
         elif action == "list":
             return self._list_processes()
         else:
-            return ToolError(tool="app_control", message=f"Unknown action: {action!r}", retryable=False)
+            return ToolError(
+                tool="app_control", message=f"Unknown action: {action!r}", retryable=False
+            )
 
     async def _arun(self, **kwargs: Any) -> Any:  # type: ignore[override]
         return self._run(**kwargs)

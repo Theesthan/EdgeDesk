@@ -59,9 +59,7 @@ class VectorStore:
             return []
         k = min(k, self._index.ntotal)
         vec = self._encode(query)
-        distances, indices = self._get_index().search(
-            np.array([vec], dtype=np.float32), k
-        )
+        distances, indices = self._get_index().search(np.array([vec], dtype=np.float32), k)
         results = []
         for dist, idx in zip(distances[0], indices[0]):
             if idx < len(self._rule_ids):
@@ -110,9 +108,7 @@ class VectorStore:
             try:
                 self._index = faiss.read_index(str(self._index_path))
                 self._rule_ids = json.loads(self._ids_path.read_text(encoding="utf-8"))
-                logger.info(
-                    "VectorStore loaded from disk ({} vectors).", self._index.ntotal
-                )
+                logger.info("VectorStore loaded from disk ({} vectors).", self._index.ntotal)
             except Exception as exc:
                 logger.warning("Failed to load VectorStore from disk: {}. Starting fresh.", exc)
                 self._index = None

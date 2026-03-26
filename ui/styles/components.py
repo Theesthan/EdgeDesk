@@ -7,7 +7,7 @@ Run this file directly for a live visual demo: uv run python ui/styles/component
 from __future__ import annotations
 
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt, pyqtProperty, pyqtSignal
-from PyQt6.QtGui import QBrush, QColor, QFont, QPainter
+from PyQt6.QtGui import QBrush, QColor, QPainter
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QFrame,
@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
 
 try:
     import qtawesome as qta
+
     _QTA = True
 except ImportError:
     _QTA = False
@@ -30,24 +31,22 @@ from ui.styles.theme import (
     ACCENT_PRIMARY,
     ACCENT_SUCCESS,
     BG_ELEVATED,
-    FONT_SIZE_BODY,
     RADIUS_MD,
     SPACE_2,
-    SPACE_4,
     TEXT_PRIMARY,
-    TEXT_SECONDARY,
     TEXT_TERTIARY,
 )
 
 _STATUS_META: dict[str, tuple[str, str]] = {
     "pending": (TEXT_TERTIARY, "fa5s.circle"),
     "running": (ACCENT_PRIMARY, "fa5s.spinner"),
-    "done":    (ACCENT_SUCCESS, "fa5s.check-circle"),
-    "failed":  (ACCENT_ERROR,   "fa5s.times-circle"),
+    "done": (ACCENT_SUCCESS, "fa5s.check-circle"),
+    "failed": (ACCENT_ERROR, "fa5s.times-circle"),
 }
 
 
 # ── GlassCard ────────────────────────────────────────────────────────────────
+
 
 class GlassCard(QFrame):
     """Frosted-glass card — base container for all elevated surfaces."""
@@ -64,6 +63,7 @@ class GlassCard(QFrame):
 
 
 # ── StatusDot ────────────────────────────────────────────────────────────────
+
 
 class StatusDot(QWidget):
     """8 x 8 px colored circle with an optional looping pulse animation."""
@@ -117,6 +117,7 @@ class StatusDot(QWidget):
 
 # ── AccentButton ─────────────────────────────────────────────────────────────
 
+
 class AccentButton(QPushButton):
     """Primary (filled) or ghost (outlined) button using design token styles."""
 
@@ -129,6 +130,7 @@ class AccentButton(QPushButton):
 
 
 # ── ToggleSwitch ──────────────────────────────────────────────────────────────
+
 
 class ToggleSwitch(QAbstractButton):
     """Animated on/off toggle. Knob slides 200 ms via QPropertyAnimation."""
@@ -180,6 +182,7 @@ class ToggleSwitch(QAbstractButton):
 
 # ── StepPill ─────────────────────────────────────────────────────────────────
 
+
 class StepPill(QWidget):
     """Single agent-step entry: icon + text label + status dot."""
 
@@ -217,6 +220,7 @@ class StepPill(QWidget):
 
 
 # ── AnimatedTabBar ────────────────────────────────────────────────────────────
+
 
 class AnimatedTabBar(QWidget):
     """Horizontal tab bar with a sliding ACCENT_PRIMARY underline indicator."""

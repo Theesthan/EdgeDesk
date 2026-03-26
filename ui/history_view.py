@@ -31,7 +31,6 @@ from ui.styles.theme import (
     ACCENT_PRIMARY,
     ACCENT_SUCCESS,
     BG_PRIMARY,
-    FONT_SIZE_BODY,
     FONT_SIZE_CAPTION,
     FONT_SIZE_TITLE,
     GLASS_BG,
@@ -95,9 +94,7 @@ class HistoryRow(GlassCard):
 
         started = execution_data.get("started_at", "")
         ts_lbl = QLabel(started[:16].replace("T", " ") if started else "—", self)
-        ts_lbl.setStyleSheet(
-            f"color: {TEXT_TERTIARY}; font-size: {FONT_SIZE_CAPTION}px;"
-        )
+        ts_lbl.setStyleSheet(f"color: {TEXT_TERTIARY}; font-size: {FONT_SIZE_CAPTION}px;")
         ts_lbl.setFixedWidth(100)
 
         rule_name = execution_data.get("rule_name", "Unknown")
@@ -117,9 +114,7 @@ class HistoryRow(GlassCard):
 
         duration = execution_data.get("duration_seconds")
         dur_lbl = QLabel(f"{duration:.1f}s" if duration is not None else "—", self)
-        dur_lbl.setStyleSheet(
-            f"color: {TEXT_SECONDARY}; font-size: {FONT_SIZE_CAPTION}px;"
-        )
+        dur_lbl.setStyleSheet(f"color: {TEXT_SECONDARY}; font-size: {FONT_SIZE_CAPTION}px;")
         dur_lbl.setFixedWidth(40)
 
         up_btn = self._thumb_btn("fa5s.thumbs-up", +1)
@@ -152,9 +147,7 @@ class HistoryRow(GlassCard):
 
         outer.addWidget(self._step_container)
 
-        self._expand_anim = QPropertyAnimation(
-            self._step_container, b"maximumHeight", self
-        )
+        self._expand_anim = QPropertyAnimation(self._step_container, b"maximumHeight", self)
         self._expand_anim.setDuration(150)
         self._expand_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
 
@@ -245,9 +238,7 @@ class HistoryView(QWidget):
 
     # -- Public API ----------------------------------------------------------
 
-    def load_executions(
-        self, executions: list[dict], *, append: bool = False
-    ) -> None:
+    def load_executions(self, executions: list[dict], *, append: bool = False) -> None:
         """Populate (or append to) the timeline from a list of execution dicts.
 
         Expected keys: id, rule_name, started_at, status, duration_seconds,
@@ -269,9 +260,7 @@ class HistoryView(QWidget):
 
             if date_str != current_date:
                 current_date = date_str
-                self._content_layout.insertWidget(
-                    insert_idx, self._date_header(date_str)
-                )
+                self._content_layout.insertWidget(insert_idx, self._date_header(date_str))
                 insert_idx += 1
 
             row = HistoryRow(exec_data, parent=self._content)

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -382,3 +384,222 @@ def test_email_list_output() -> None:
     item = EmailItem(uid="1", subject="Hi", sender="a@b.com", date="2026-01-01", body="Hello")
     out = EmailListOutput(emails=[item], total=1)
     assert out.total == 1
+
+
+# ===========================================================================
+# VectorStore
+# ===========================================================================
+
+
+def _make_mock_model(dim: int = 384) -> object:
+    """Return a mock SentenceTransformer that returns deterministic embeddings."""
+    from unittest.mock import MagicMock
+
+    import numpy as np
+
+    mock = MagicMock()
+    mock.encode.side_effect = lambda text, **_kw: np.ones(dim, dtype=np.float32)
+    return mock
+
+
+def test_vector_store_instantiation(tmp_path: Path) -> None:
+    from db.vector_store import VectorStore
+
+    vs = VectorStore(data_dir=tmp_path)
+    assert vs.size == 0
+
+
+def test_vector_store_add_and_size(tmp_path: Path) -> None:
+    from db.vector_store import VectorStore
+
+    vs = VectorStore(data_dir=tmp_path)
+    vs._model = _make_mock_model()
+    vs.add_rule("rule-1", "send daily report")
+    assert vs.size == 1
+
+
+def test_vector_store_search_returns_result(tmp_path: Path) -> None:
+    from db.vector_store import VectorStore
+
+    vs = VectorStore(data_dir=tmp_path)
+    vs._model = _make_mock_model()
+    vs.add_rule("rule-1", "send daily report")
+    vs.add_rule("rule-2", "watch folder")
+    results = vs.search("report", k=2)
+    assert len(results) == 2
+    ids = [r[0] for r in results]
+    assert "rule-1" in ids
+
+
+def test_vector_store_search_empty_returns_empty(tmp_path: Path) -> None:
+    from db.vector_store import VectorStore
+
+    vs = VectorStore(data_dir=tmp_path)
+    results = vs.search("anything")
+    assert results == []
+
+
+def test_vector_store_search_k_capped_at_total(tmp_path: Path) -> None:
+    from db.vector_store import VectorStore
+
+    vs = VectorStore(data_dir=tmp_path)
+    vs._model = _make_mock_model()
+    vs.add_rule("r1", "text")
+    results = vs.search("text", k=100)
+    assert len(results) == 1
+
+
+def test_vector_store_persist_and_reload(tmp_path: Path) -> None:
+    from db.vector_store import VectorStore
+
+    vs1 = VectorStore(data_dir=tmp_path)
+    vs1._model = _make_mock_model()
+    vs1.add_rule("r1", "alpha")
+    vs1.add_rule("r2", "beta")
+    vs1.persist()
+
+    vs2 = VectorStore(data_dir=tmp_path)
+    vs2._model = _make_mock_model()
+    assert vs2.size == 2
+    assert "r1" in vs2._rule_ids
+    assert "r2" in vs2._rule_ids
+
+
+def test_vector_store_auto_persist_every_10(tmp_path: Path) -> None:
+    """Auto-persist must fire exactly once after 10 inserts."""
+    from unittest.mock import patch
+
+    from db.vector_store import VectorStore
+
+    vs = VectorStore(data_dir=tmp_path)
+    vs._model = _make_mock_model()
+
+    with patch.object(vs, "persist", wraps=vs.persist) as mock_persist:
+        for i in range(10):
+            vs.add_rule(f"r{i}", f"text {i}")
+        mock_persist.assert_called_once()
+
+
+def test_vector_store_auto_persist_not_before_10(tmp_path: Path) -> None:
+    from unittest.mock import patch
+
+    from db.vector_store import VectorStore
+
+    vs = VectorStore(data_dir=tmp_path)
+    vs._model = _make_mock_model()
+
+    with patch.object(vs, "persist") as mock_persist:
+        for i in range(9):
+            vs.add_rule(f"r{i}", f"text {i}")
+        mock_persist.assert_not_called()
+
+
+def test_vector_store_remove_rule(tmp_path: Path) -> None:
+    from db.vector_store import VectorStore
+
+    vs = VectorStore(data_dir=tmp_path)
+    vs._model = _make_mock_model()
+    vs.add_rule("r1", "keep")
+    vs.add_rule("r2", "remove me")
+    vs.remove_rule("r2")
+    assert "r2" not in vs._rule_ids
+    assert "r1" in vs._rule_ids
+
+
+def test_vector_store_load_handles_corrupt_files(tmp_path: Path) -> None:
+    """Corrupt index files should be silently ignored; store starts fresh."""
+    from db.vector_store import VectorStore
+
+    (tmp_path / "rules.faiss").write_bytes(b"not-a-faiss-index")
+    (tmp_path / "rules_ids.json").write_text('["r1"]', encoding="utf-8")
+
+    vs = VectorStore(data_dir=tmp_path)
+    assert vs.size == 0
+    assert vs._rule_ids == []
+
+
+# ===========================================================================
+# db/session helpers
+# ===========================================================================
+
+
+def test_data_dir_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("DATA_DIR", raising=False)
+    from db.session import _data_dir
+
+    result = _data_dir()
+    assert result.name == ".edgedesk"
+
+
+def test_data_dir_from_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "custom"))
+    from db.session import _data_dir
+
+    result = _data_dir()
+    assert result == (tmp_path / "custom").resolve()
+
+
+def test_db_url_creates_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    target = tmp_path / "edgedesk_test"
+    monkeypatch.setenv("DATA_DIR", str(target))
+    from db.session import _db_url
+
+    url = _db_url()
+    assert target.exists()
+    assert "edgedesk.db" in url
+
+
+def test_get_engine_returns_engine(tmp_path: Path) -> None:
+    from db.session import get_engine, reset_engine
+
+    reset_engine()
+    engine = get_engine("sqlite+aiosqlite:///:memory:")
+    assert engine is not None
+    # Second call returns cached instance
+    assert get_engine("sqlite+aiosqlite:///:memory:") is engine
+    reset_engine()
+
+
+def test_get_session_factory_returns_factory(tmp_path: Path) -> None:
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    from db.session import get_session_factory, reset_engine
+
+    reset_engine()
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    factory = get_session_factory(engine)
+    assert factory is not None
+    # Second call returns cached instance
+    assert get_session_factory(engine) is factory
+    reset_engine()
+
+
+async def test_get_session_yields_session(tmp_path: Path) -> None:
+    from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+
+    from db.session import get_session, get_session_factory, init_db, reset_engine
+
+    reset_engine()
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    await init_db(engine)
+    get_session_factory(engine)
+
+    async for session in get_session():
+        assert isinstance(session, AsyncSession)
+        break
+
+    reset_engine()
+
+
+def test_reset_engine_clears_cache() -> None:
+    from db.session import get_engine, reset_engine
+
+    reset_engine()
+    engine = get_engine("sqlite+aiosqlite:///:memory:")
+    assert engine is not None
+    reset_engine()
+
+    from db.session import _engine, _session_factory
+
+    assert _engine is None
+    assert _session_factory is None

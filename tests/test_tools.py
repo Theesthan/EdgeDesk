@@ -6,7 +6,6 @@ screen capture, GUI, file system (for error paths), or network calls occur.
 
 from __future__ import annotations
 
-import os
 import time
 from pathlib import Path
 from typing import Any
@@ -18,8 +17,8 @@ from schemas.models import (
     AppLaunchOutput,
     ClipboardReadOutput,
     EmailListOutput,
-    FileReadOutput,
     FileMoveOutput,
+    FileReadOutput,
     GUIActionOutput,
     ScreenCaptureOutput,
     ToolError,
@@ -199,7 +198,10 @@ class TestGUITool:
             if attempts[0] < 2:
                 raise OSError("first fail")
 
-        with patch("tools.gui.pyautogui.click", side_effect=succeed_second), patch("tools.gui.time.sleep"):
+        with (
+            patch("tools.gui.pyautogui.click", side_effect=succeed_second),
+            patch("tools.gui.time.sleep"),
+        ):
             tool = self._make_tool()
             result = tool._run(action="click", x=5, y=5)
 
@@ -423,7 +425,9 @@ class TestNotifyTool:
         assert _is_success(result)
         assert result["sent"] is True
         assert result["title"] == "Test"
-        mock_notification.notify.assert_called_once_with(title="Test", message="A notification", timeout=5)
+        mock_notification.notify.assert_called_once_with(
+            title="Test", message="A notification", timeout=5
+        )
 
     def test_notify_plyer_failure(self) -> None:
         mock_notification = MagicMock()
@@ -483,7 +487,6 @@ class TestEmailTool:
         monkeypatch.setenv("IMAP_PASS", "secret")
 
         # Build a minimal RFC 822 message
-        import email as email_mod
         from email.mime.text import MIMEText
 
         msg = MIMEText("Hello email body")
@@ -510,7 +513,9 @@ class TestEmailTool:
 
         import imaplib as imap_mod
 
-        with patch("tools.email_reader.imaplib.IMAP4_SSL", side_effect=imap_mod.IMAP4.error("connect fail")):
+        with patch(
+            "tools.email_reader.imaplib.IMAP4_SSL", side_effect=imap_mod.IMAP4.error("connect fail")
+        ):
             tool = self._make_tool()
             result = tool._run(folder="INBOX", limit=5)
 

@@ -67,8 +67,7 @@ async def health_check(base_url: str = DEFAULT_BASE_URL) -> None:
         logger.debug("Ollama health check OK at {}", base_url)
     except Exception as exc:
         raise ConnectionError(
-            f"Ollama is not reachable at {base_url}. "
-            f"Start it with `ollama serve`. Error: {exc}"
+            f"Ollama is not reachable at {base_url}. Start it with `ollama serve`. Error: {exc}"
         ) from exc
 
 

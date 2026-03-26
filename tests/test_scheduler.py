@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from apscheduler.triggers.cron import CronTrigger
@@ -13,10 +13,9 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from db.crud import create_execution, create_rule, get_rule, list_executions
+from db.crud import create_rule, get_rule, list_executions
 from scheduler.engine import SchedulerEngine
 from scheduler.triggers import make_trigger
-
 
 # ===========================================================================
 # Helpers / fixtures
@@ -80,9 +79,7 @@ class TestMakeTrigger:
         assert isinstance(trigger, IntervalTrigger)
 
     def test_file_event_custom_interval(self) -> None:
-        rule = _make_rule_stub(
-            trigger_type="file_event", trigger_config={"interval_seconds": 60}
-        )
+        rule = _make_rule_stub(trigger_type="file_event", trigger_config={"interval_seconds": 60})
         trigger = make_trigger(rule)
         assert isinstance(trigger, IntervalTrigger)
 
@@ -198,7 +195,9 @@ class TestSchedulerEngineRegistration:
         with (
             patch.object(engine._scheduler, "start"),
             patch.object(
-                type(engine._scheduler), "running", new_callable=lambda: property(lambda _self: True)
+                type(engine._scheduler),
+                "running",
+                new_callable=lambda: property(lambda _self: True),
             ),
             patch.object(engine._scheduler, "shutdown") as mock_shutdown,
         ):
@@ -270,7 +269,9 @@ class TestSchedulerEngineReloadRule:
         self, db_session_factory: async_sessionmaker[AsyncSession]
     ) -> None:
         async with db_session_factory() as session:
-            rule = await create_rule(session, name="toggle-rule", trigger_type="manual", enabled=True)
+            rule = await create_rule(
+                session, name="toggle-rule", trigger_type="manual", enabled=True
+            )
             await session.commit()
             rule_id = rule.id
 
@@ -315,7 +316,9 @@ class TestSchedulerEngineReloadRule:
     ) -> None:
         """reload_rule on an already-registered rule replaces (not duplicates) it."""
         async with db_session_factory() as session:
-            rule = await create_rule(session, name="replace-rule", trigger_type="manual", enabled=True)
+            rule = await create_rule(
+                session, name="replace-rule", trigger_type="manual", enabled=True
+            )
             await session.commit()
             rule_id = rule.id
 

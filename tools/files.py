@@ -54,20 +54,30 @@ class FileTool(BaseTool):
         try:
             size = p.stat().st_size
             if size > _MAX_READ_BYTES:
-                return ToolError(tool="file_read", message=f"File too large ({size} bytes > {_MAX_READ_BYTES}).", retryable=False)
+                return ToolError(
+                    tool="file_read",
+                    message=f"File too large ({size} bytes > {_MAX_READ_BYTES}).",
+                    retryable=False,
+                )
             content = p.read_text(encoding=encoding)
             return FileReadOutput(content=content, encoding=encoding, size_bytes=size)
         except Exception as exc:
             logger.error("file_read '{}': {}", path_str, exc)
             return ToolError(tool="file_read", message=str(exc), retryable=False)
 
-    def _write(self, path_str: str, content: str, encoding: str = "utf-8", overwrite: bool = True) -> ToolError | dict[str, Any]:
+    def _write(
+        self, path_str: str, content: str, encoding: str = "utf-8", overwrite: bool = True
+    ) -> ToolError | dict[str, Any]:
         p = _safe_path(path_str)
         if p is None:
             return ToolError(tool="file_write", message="Path traversal denied.", retryable=False)
         try:
             if p.exists() and not overwrite:
-                return ToolError(tool="file_write", message=f"File exists and overwrite=False: {p}", retryable=False)
+                return ToolError(
+                    tool="file_write",
+                    message=f"File exists and overwrite=False: {p}",
+                    retryable=False,
+                )
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(content, encoding=encoding)
             return {"path": str(p), "size_bytes": p.stat().st_size}
@@ -108,7 +118,11 @@ class FileTool(BaseTool):
             return ToolError(tool="file_list", message="Path traversal denied.", retryable=False)
         try:
             entries = [
-                {"name": e.name, "is_dir": e.is_dir(), "size_bytes": e.stat().st_size if e.is_file() else 0}
+                {
+                    "name": e.name,
+                    "is_dir": e.is_dir(),
+                    "size_bytes": e.stat().st_size if e.is_file() else 0,
+                }
                 for e in sorted(p.iterdir())
             ]
             return {"path": str(p), "entries": entries}
@@ -140,9 +154,13 @@ class FileTool(BaseTool):
             return self._read(inp.path, encoding)
         elif action == "write":
             try:
-                inp = FileWriteInput(path=path, content=content, encoding=encoding, overwrite=overwrite)
+                inp = FileWriteInput(
+                    path=path, content=content, encoding=encoding, overwrite=overwrite
+                )
             except Exception as exc:
-                return ToolError(tool="file_write", message=f"Invalid input: {exc}", retryable=False)
+                return ToolError(
+                    tool="file_write", message=f"Invalid input: {exc}", retryable=False
+                )
             return self._write(inp.path, inp.content, inp.encoding, inp.overwrite)
         elif action == "move":
             try:

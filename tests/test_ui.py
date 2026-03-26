@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import pytest
 
-
 # ===========================================================================
 # ui/styles/theme.py — design tokens
 # ===========================================================================
@@ -30,8 +29,19 @@ def test_color_tokens_are_hex_or_rgba() -> None:
         TEXT_SECONDARY,
         TEXT_TERTIARY,
     )
-    hex_tokens = [BG_PRIMARY, BG_SURFACE, BG_ELEVATED, ACCENT_PRIMARY, ACCENT_SUCCESS,
-                  ACCENT_WARNING, ACCENT_ERROR, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_TERTIARY]
+
+    hex_tokens = [
+        BG_PRIMARY,
+        BG_SURFACE,
+        BG_ELEVATED,
+        ACCENT_PRIMARY,
+        ACCENT_SUCCESS,
+        ACCENT_WARNING,
+        ACCENT_ERROR,
+        TEXT_PRIMARY,
+        TEXT_SECONDARY,
+        TEXT_TERTIARY,
+    ]
     rgba_tokens = [GLASS_BG, GLASS_BORDER, ACCENT_GLOW]
 
     for token in hex_tokens:
@@ -44,22 +54,26 @@ def test_color_tokens_are_hex_or_rgba() -> None:
 
 def test_bg_primary_exact_value() -> None:
     from ui.styles.theme import BG_PRIMARY
+
     assert BG_PRIMARY == "#0a0a0f"
 
 
 def test_accent_primary_exact_value() -> None:
     from ui.styles.theme import ACCENT_PRIMARY
+
     assert ACCENT_PRIMARY == "#7c6af7"
 
 
 def test_radius_tokens_are_ints_and_ascending() -> None:
     from ui.styles.theme import RADIUS_LG, RADIUS_MD, RADIUS_SM, RADIUS_XL
+
     assert isinstance(RADIUS_SM, int)
     assert RADIUS_SM < RADIUS_MD < RADIUS_LG < RADIUS_XL
 
 
 def test_radius_exact_values() -> None:
     from ui.styles.theme import RADIUS_LG, RADIUS_MD, RADIUS_SM, RADIUS_XL
+
     assert RADIUS_SM == 6
     assert RADIUS_MD == 10
     assert RADIUS_LG == 16
@@ -68,12 +82,14 @@ def test_radius_exact_values() -> None:
 
 def test_spacing_grid_are_multiples_of_4() -> None:
     from ui.styles.theme import SPACE_1, SPACE_2, SPACE_3, SPACE_4, SPACE_6, SPACE_8
+
     for space in (SPACE_1, SPACE_2, SPACE_3, SPACE_4, SPACE_6, SPACE_8):
         assert space % 4 == 0, f"SPACE={space} is not a multiple of 4"
 
 
 def test_spacing_exact_values() -> None:
     from ui.styles.theme import SPACE_1, SPACE_2, SPACE_4
+
     assert SPACE_1 == 4
     assert SPACE_2 == 8
     assert SPACE_4 == 16
@@ -86,6 +102,7 @@ def test_font_sizes_are_positive_ints() -> None:
         FONT_SIZE_CODE,
         FONT_SIZE_TITLE,
     )
+
     for size in (FONT_SIZE_TITLE, FONT_SIZE_BODY, FONT_SIZE_CAPTION, FONT_SIZE_CODE):
         assert isinstance(size, int) and size > 0
 
@@ -94,6 +111,7 @@ def test_fonts_dir_path_has_correct_structure() -> None:
     from pathlib import Path
 
     from ui.styles.theme import FONTS_DIR
+
     assert isinstance(FONTS_DIR, Path)
     assert FONTS_DIR.name == "fonts"
     assert FONTS_DIR.parent.name == "assets"
@@ -106,20 +124,23 @@ def test_fonts_dir_path_has_correct_structure() -> None:
 
 def test_glass_card_qss_contains_required_keys() -> None:
     from ui.styles.qss import glass_card_qss
+
     qss = glass_card_qss()
     assert "GlassCard" in qss
     assert "border-radius" in qss
-    assert "rgba" in qss      # GLASS_BG / GLASS_BORDER use rgba
+    assert "rgba" in qss  # GLASS_BG / GLASS_BORDER use rgba
 
 
 def test_glass_card_qss_accepts_custom_radius() -> None:
     from ui.styles.qss import glass_card_qss
+
     qss = glass_card_qss(radius=22)
     assert "22px" in qss
 
 
 def test_input_field_qss_covers_focus_state() -> None:
     from ui.styles.qss import input_field_qss
+
     qss = input_field_qss()
     assert "QLineEdit" in qss
     assert "focus" in qss
@@ -128,6 +149,7 @@ def test_input_field_qss_covers_focus_state() -> None:
 
 def test_scrollbar_qss_covers_both_orientations() -> None:
     from ui.styles.qss import scrollbar_qss
+
     qss = scrollbar_qss()
     assert "QScrollBar:vertical" in qss
     assert "QScrollBar:horizontal" in qss
@@ -137,6 +159,7 @@ def test_scrollbar_qss_covers_both_orientations() -> None:
 def test_button_qss_primary_uses_accent_color() -> None:
     from ui.styles.qss import button_qss
     from ui.styles.theme import ACCENT_PRIMARY
+
     qss = button_qss("primary")
     assert ACCENT_PRIMARY in qss
     assert "QPushButton" in qss
@@ -144,6 +167,7 @@ def test_button_qss_primary_uses_accent_color() -> None:
 
 def test_button_qss_ghost_uses_transparent_bg() -> None:
     from ui.styles.qss import button_qss
+
     qss = button_qss("ghost")
     assert "transparent" in qss
     assert "border:" in qss
@@ -151,12 +175,14 @@ def test_button_qss_ghost_uses_transparent_bg() -> None:
 
 def test_button_qss_default_is_primary() -> None:
     from ui.styles.qss import button_qss
+
     assert button_qss() == button_qss("primary")
 
 
 def test_tab_button_qss_active_uses_primary_text() -> None:
     from ui.styles.qss import tab_button_qss
     from ui.styles.theme import TEXT_PRIMARY, TEXT_SECONDARY
+
     active_qss = tab_button_qss(active=True)
     inactive_qss = tab_button_qss(active=False)
     assert TEXT_PRIMARY in active_qss
@@ -175,8 +201,8 @@ def test_component_classes_are_importable() -> None:
             AccentButton,
             AnimatedTabBar,
             GlassCard,
-            StepPill,
             StatusDot,
+            StepPill,
             ToggleSwitch,
         )
     except ImportError as exc:

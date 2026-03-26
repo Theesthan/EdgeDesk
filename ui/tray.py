@@ -107,13 +107,9 @@ class SystemTrayApp(QSystemTrayIcon):
 
     # -- Public API ----------------------------------------------------------
 
-    def show_notification(
-        self, title: str, message: str, duration_ms: int = 5000
-    ) -> None:
+    def show_notification(self, title: str, message: str, duration_ms: int = 5000) -> None:
         """Show a standard system balloon notification."""
-        self.showMessage(
-            title, message, QSystemTrayIcon.MessageIcon.Information, duration_ms
-        )
+        self.showMessage(title, message, QSystemTrayIcon.MessageIcon.Information, duration_ms)
 
     # -- Private -------------------------------------------------------------
 
@@ -123,9 +119,9 @@ class SystemTrayApp(QSystemTrayIcon):
 
         _entries: list[tuple[str, str, pyqtSignal]] = [
             ("fa5s.terminal", "Open Overlay   Alt+Space", self.open_overlay_requested),
-            ("fa5s.list",     "Rules",                    self.open_rules_requested),
-            ("fa5s.history",  "History",                  self.open_history_requested),
-            ("fa5s.cog",      "Settings",                 self.open_settings_requested),
+            ("fa5s.list", "Rules", self.open_rules_requested),
+            ("fa5s.history", "History", self.open_history_requested),
+            ("fa5s.cog", "Settings", self.open_settings_requested),
         ]
 
         icon_color = TEXT_SECONDARY

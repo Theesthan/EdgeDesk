@@ -85,8 +85,10 @@ class AgentOrchestrator:
                 state = await self._graph.aget_state(config)
                 messages = state.values.get("messages", [])
                 for msg in reversed(messages):
-                    if hasattr(msg, "content") and msg.content and not getattr(
-                        msg, "tool_calls", None
+                    if (
+                        hasattr(msg, "content")
+                        and msg.content
+                        and not getattr(msg, "tool_calls", None)
                     ):
                         yield msg.content
                         break

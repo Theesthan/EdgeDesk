@@ -144,9 +144,7 @@ async def update_feedback(
     feedback: int,
 ) -> Execution | None:
     """Set feedback (1=good, -1=bad, 0=none) on an execution."""
-    result = await session.execute(
-        select(Execution).where(Execution.id == execution_id)
-    )
+    result = await session.execute(select(Execution).where(Execution.id == execution_id))
     execution = result.scalar_one_or_none()
     if execution is None:
         return None

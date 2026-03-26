@@ -6,7 +6,6 @@ Settings are persisted to the project .env file via python-dotenv.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -16,8 +15,6 @@ from PyQt6.QtWidgets import (
     QKeySequenceEdit,
     QLabel,
     QLineEdit,
-    QPlainTextEdit,
-    QPushButton,
     QSlider,
     QStackedWidget,
     QVBoxLayout,
@@ -25,7 +22,7 @@ from PyQt6.QtWidgets import (
 )
 
 from ui.styles.components import AccentButton, AnimatedTabBar, ToggleSwitch
-from ui.styles.qss import input_field_qss, scrollbar_qss
+from ui.styles.qss import input_field_qss
 from ui.styles.theme import (
     ACCENT_PRIMARY,
     BG_ELEVATED,
@@ -33,12 +30,9 @@ from ui.styles.theme import (
     BG_SURFACE,
     FONT_SIZE_BODY,
     FONT_SIZE_CAPTION,
-    FONT_SIZE_TITLE,
     GLASS_BG,
     GLASS_BORDER,
-    RADIUS_MD,
     RADIUS_SM,
-    SPACE_1,
     SPACE_2,
     SPACE_4,
     SPACE_6,
@@ -277,9 +271,7 @@ class SettingsDialog(QDialog):
                 pass
 
         self._model_edit.setText(values.get("OLLAMA_MODEL") or "mistral-nemo")
-        self._base_url_edit.setText(
-            values.get("OLLAMA_BASE_URL") or "http://localhost:11434"
-        )
+        self._base_url_edit.setText(values.get("OLLAMA_BASE_URL") or "http://localhost:11434")
         try:
             self._ctx_slider.setValue(int(values.get("NUM_CTX") or 4096))
         except (ValueError, TypeError):

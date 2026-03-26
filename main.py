@@ -12,7 +12,6 @@ import time
 from dotenv import load_dotenv
 from loguru import logger
 
-
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -24,8 +23,8 @@ def main() -> None:
     logger.info("EdgeDesk starting…")
 
     # Qt / qasync imports are deferred so load_dotenv() runs first.
-    from PyQt6.QtWidgets import QApplication
     import qasync  # type: ignore[import]
+    from PyQt6.QtWidgets import QApplication
 
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
@@ -44,8 +43,6 @@ def main() -> None:
 
 async def _async_main(app: object) -> None:  # app: QApplication
     """Full boot: DB → VectorStore → LLM → Agent → Scheduler → UI."""
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
     # 1. Database ----------------------------------------------------------
     from db.session import get_session_factory, init_db
@@ -65,7 +62,7 @@ async def _async_main(app: object) -> None:  # app: QApplication
         logger.warning("VectorStore unavailable: {} — semantic search disabled", exc)
 
     # 3. Ollama health check (non-fatal) -----------------------------------
-    from core.llm import health_check, build_llm
+    from core.llm import build_llm, health_check
 
     ollama_ok = True
     try:
@@ -89,11 +86,11 @@ async def _async_main(app: object) -> None:  # app: QApplication
     await scheduler.start()
 
     # 6. UI components ----------------------------------------------------
-    from ui.tray import SystemTrayApp
+    from core.hotkey import HotkeyManager
+    from ui.history_view import HistoryView
     from ui.overlay import OverlayWindow
     from ui.rule_editor import RuleManagerPanel
-    from ui.history_view import HistoryView
-    from core.hotkey import HotkeyManager
+    from ui.tray import SystemTrayApp
 
     tray = SystemTrayApp()
     overlay = OverlayWindow()
@@ -119,9 +116,7 @@ async def _async_main(app: object) -> None:  # app: QApplication
     tray.open_history_requested.connect(
         lambda: asyncio.ensure_future(_show_history(hist_win, hist_view, session_factory, 0))
     )
-    tray.open_settings_requested.connect(
-        lambda: _show_settings(hotkey_mgr, session_factory)
-    )
+    tray.open_settings_requested.connect(lambda: _show_settings(hotkey_mgr, session_factory))
 
     overlay.instruction_submitted.connect(
         lambda instr: asyncio.ensure_future(
@@ -138,9 +133,7 @@ async def _async_main(app: object) -> None:  # app: QApplication
         lambda rid: asyncio.ensure_future(_on_rule_deleted(rid, session_factory, scheduler))
     )
     rule_panel.rule_toggled.connect(
-        lambda rid, en: asyncio.ensure_future(
-            _on_rule_toggled(rid, en, session_factory, scheduler)
-        )
+        lambda rid, en: asyncio.ensure_future(_on_rule_toggled(rid, en, session_factory, scheduler))
     )
 
     hist_view.feedback_given.connect(

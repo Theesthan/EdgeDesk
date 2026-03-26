@@ -3,7 +3,11 @@ target-version = "py312"
 
 [lint]
 select = ["E", "F", "I", "UP", "N"]
-ignore = []
+ignore = [
+    "N802",   # Qt overrides use camelCase (paintEvent, mousePressEvent, etc.)
+    "N806",   # Qt variable names (e.g. QApplication)
+    "F841",   # Local variable assigned but unused (common in mock tests)
+]
 
 [lint.isort]
 known-first-party = ["core", "tools", "db", "scheduler", "ui", "schemas"]

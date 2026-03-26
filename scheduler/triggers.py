@@ -47,9 +47,7 @@ def make_trigger(rule: Rule) -> BaseTrigger:
             logger.debug("CronTrigger created for rule {!r}: {}", rule.id, config)
             return trigger
         except Exception as exc:
-            raise ValueError(
-                f"Invalid cron config for rule {rule.id!r}: {exc}"
-            ) from exc
+            raise ValueError(f"Invalid cron config for rule {rule.id!r}: {exc}") from exc
 
     elif trigger_type == "file_event":
         interval = int(config.get("interval_seconds", _DEFAULT_FILE_POLL_SECONDS))

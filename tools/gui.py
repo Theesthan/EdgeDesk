@@ -48,7 +48,13 @@ def _with_retry(fn: Any, *args: Any, **kwargs: Any) -> Any:
         except Exception as exc:
             last_exc = exc
             wait = _BACKOFF_BASE * (2**attempt)
-            logger.warning("GUI action failed (attempt {}/{}): {} — retrying in {}s", attempt + 1, _MAX_RETRIES, exc, wait)
+            logger.warning(
+                "GUI action failed (attempt {}/{}): {} — retrying in {}s",
+                attempt + 1,
+                _MAX_RETRIES,
+                exc,
+                wait,
+            )
             time.sleep(wait)
     raise last_exc  # type: ignore[misc]
 
@@ -69,7 +75,9 @@ class GUITool(BaseTool):
             _with_retry(pyautogui.click, inp.x, inp.y, clicks=inp.clicks, button=inp.button)
             return GUIActionOutput(success=True, message=f"Clicked ({inp.x}, {inp.y})")
         except pyautogui.FailSafeException:
-            return ToolError(tool="gui_click", message="FailSafe: mouse moved to corner.", retryable=False)
+            return ToolError(
+                tool="gui_click", message="FailSafe: mouse moved to corner.", retryable=False
+            )
         except Exception as exc:
             return ToolError(tool="gui_click", message=str(exc), retryable=True)
 
@@ -78,16 +86,22 @@ class GUITool(BaseTool):
             _with_retry(pyautogui.typewrite, inp.text, interval=inp.interval)
             return GUIActionOutput(success=True, message=f"Typed {len(inp.text)} chars")
         except pyautogui.FailSafeException:
-            return ToolError(tool="gui_type", message="FailSafe: mouse moved to corner.", retryable=False)
+            return ToolError(
+                tool="gui_type", message="FailSafe: mouse moved to corner.", retryable=False
+            )
         except Exception as exc:
             return ToolError(tool="gui_type", message=str(exc), retryable=True)
 
     def _scroll(self, inp: GUIScrollInput) -> GUIActionOutput | ToolError:
         try:
             _with_retry(pyautogui.scroll, inp.clicks, x=inp.x, y=inp.y)
-            return GUIActionOutput(success=True, message=f"Scrolled {inp.clicks} at ({inp.x}, {inp.y})")
+            return GUIActionOutput(
+                success=True, message=f"Scrolled {inp.clicks} at ({inp.x}, {inp.y})"
+            )
         except pyautogui.FailSafeException:
-            return ToolError(tool="gui_scroll", message="FailSafe: mouse moved to corner.", retryable=False)
+            return ToolError(
+                tool="gui_scroll", message="FailSafe: mouse moved to corner.", retryable=False
+            )
         except Exception as exc:
             return ToolError(tool="gui_scroll", message=str(exc), retryable=True)
 
@@ -96,7 +110,9 @@ class GUITool(BaseTool):
             _with_retry(pyautogui.hotkey, *inp.keys)
             return GUIActionOutput(success=True, message=f"Hotkey: {'+'.join(inp.keys)}")
         except pyautogui.FailSafeException:
-            return ToolError(tool="gui_hotkey", message="FailSafe: mouse moved to corner.", retryable=False)
+            return ToolError(
+                tool="gui_hotkey", message="FailSafe: mouse moved to corner.", retryable=False
+            )
         except Exception as exc:
             return ToolError(tool="gui_hotkey", message=str(exc), retryable=True)
 
@@ -123,16 +139,22 @@ class GUITool(BaseTool):
             try:
                 inp = GUIScrollInput(**kwargs)
             except Exception as exc:
-                return ToolError(tool="gui_scroll", message=f"Invalid input: {exc}", retryable=False)
+                return ToolError(
+                    tool="gui_scroll", message=f"Invalid input: {exc}", retryable=False
+                )
             return self._scroll(inp)
         elif action == "hotkey":
             try:
                 inp = GUIHotkeyInput(**kwargs)
             except Exception as exc:
-                return ToolError(tool="gui_hotkey", message=f"Invalid input: {exc}", retryable=False)
+                return ToolError(
+                    tool="gui_hotkey", message=f"Invalid input: {exc}", retryable=False
+                )
             return self._hotkey(inp)
         else:
-            return ToolError(tool="gui_action", message=f"Unknown action: {action!r}", retryable=False)
+            return ToolError(
+                tool="gui_action", message=f"Unknown action: {action!r}", retryable=False
+            )
 
     async def _arun(self, action: str, **kwargs: Any) -> GUIActionOutput | ToolError:  # type: ignore[override]
         loop = asyncio.get_event_loop()

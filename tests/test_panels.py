@@ -12,7 +12,6 @@ from pathlib import Path
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -182,6 +181,7 @@ def test_settings_dialog_save_load_roundtrip(tmp_path: Path) -> None:
     """Settings saved to a temp .env must be readable back."""
     try:
         from dotenv import dotenv_values  # type: ignore[import]
+
         from ui.settings import SettingsDialog
 
         app = _make_app()

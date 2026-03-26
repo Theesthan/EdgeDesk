@@ -17,7 +17,6 @@ from sqlalchemy.pool import StaticPool
 
 from db.models import Base
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -104,9 +103,7 @@ async def test_init_db_creates_tables(tmp_path: Path) -> None:
     await init_db(engine)
 
     async with engine.connect() as conn:
-        result = await conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table'")
-        )
+        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = {row[0] for row in result.fetchall()}
 
     await engine.dispose()
@@ -250,7 +247,13 @@ async def test_on_rule_saved_calls_scheduler_reload(sf) -> None:
 
     sched = _MockScheduler()
     await _on_rule_saved(
-        {"id": None, "name": "R", "instruction": "i", "trigger_type": "manual", "trigger_config": {}},
+        {
+            "id": None,
+            "name": "R",
+            "instruction": "i",
+            "trigger_type": "manual",
+            "trigger_config": {},
+        },
         sf,
         sched,
         None,
@@ -414,9 +417,9 @@ def test_async_helpers_are_coroutines() -> None:
         _on_rule_saved,
         _on_rule_toggled,
         _run_instruction,
-        _shutdown,
         _show_history,
         _show_rules,
+        _shutdown,
     )
 
     for fn in (

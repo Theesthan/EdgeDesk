@@ -41,7 +41,6 @@ from ui.styles.theme import (
     TEXT_PRIMARY,
 )
 
-
 # ---------------------------------------------------------------------------
 # DWM helper (Windows only)
 # ---------------------------------------------------------------------------
@@ -170,9 +169,7 @@ class StepLogArea(QScrollArea):
 
         self._pills: dict[str, StepPill] = {}
 
-    def add_step_pill(
-        self, step_id: str, text: str = "", status: str = "pending"
-    ) -> StepPill:
+    def add_step_pill(self, step_id: str, text: str = "", status: str = "pending") -> StepPill:
         """Insert a new StepPill before the trailing stretch and animate open if needed."""
         pill = StepPill(text=text, status=status, parent=self._container)
         insert_idx = max(0, self._layout.count() - 1)

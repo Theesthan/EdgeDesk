@@ -45,7 +45,9 @@ def _fetch_emails(folder: str, limit: int) -> EmailListOutput | ToolError:
             # Search all messages; UIDs are strings
             status, data = imap.search(None, "ALL")
             if status != "OK":
-                return ToolError(tool="email_reader", message=f"IMAP search failed: {status}", retryable=True)
+                return ToolError(
+                    tool="email_reader", message=f"IMAP search failed: {status}", retryable=True
+                )
 
             uids = data[0].split()
             recent_uids = uids[-limit:] if len(uids) > limit else uids

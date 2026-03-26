@@ -50,9 +50,7 @@ class HotkeyManager(QObject):
 
     hotkey_triggered: pyqtSignal = pyqtSignal()
 
-    def __init__(
-        self, hotkey: str = "alt+space", parent: QObject | None = None
-    ) -> None:
+    def __init__(self, hotkey: str = "alt+space", parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._hotkey = hotkey
         self._registered: bool = False
