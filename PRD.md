@@ -53,6 +53,7 @@ Modern desktop automation tools (Zapier, Make, AutoHotkey) are either cloud-depe
 - PyQt6-based system tray app with a chat-style input overlay (global hotkey: `Alt+Space`)
 - Users type or speak instructions in plain English
 - Displays current task, sub-steps, and execution log in real-time
+- UI components designed using **21st.dev Magic MCP** reference specs, translated into PyQt6 QSS for a premium glassmorphism aesthetic
 
 ### 5.2 Local LLM Brain
 - LLM served locally via **Ollama** (recommended: `mistral-nemo:12b`, `llama3.1:8b`, or `phi4:14b`)
@@ -164,6 +165,7 @@ Modern desktop automation tools (Zapier, Make, AutoHotkey) are either cloud-depe
 | pytest + pytest-asyncio | Testing agent logic |
 | loguru | Structured logging |
 | rich | Beautiful terminal output for CLI mode |
+| 21st.dev Magic MCP (`@21st-dev/magic`) | UI component design reference — generates polished component specs that are translated into PyQt6 QSS |
 
 ---
 
