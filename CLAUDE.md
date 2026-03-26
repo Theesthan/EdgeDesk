@@ -18,7 +18,7 @@ EdgeDesk is a local, privacy-first AI desktop automation agent. Read this fully 
 
 ## Architecture Map
 
-```
+```text
 main.py → SystemTrayApp (ui/tray.py)
         → OverlayWindow (ui/overlay.py)   [Alt+Space hotkey]
         → AgentOrchestrator (core/agent.py)
@@ -329,6 +329,7 @@ Component needed: <describe the widget>
 When building this project, follow these patterns from the everything-claude-code system:
 
 ### Sub-agents to Use
+
 When a task is complex, delegate to these sub-agent archetypes:
 
 - **planner** — Break down a new feature into steps before coding
@@ -491,6 +492,7 @@ dependencies = [
 ## Implementation Plan
 
 > **How to use this plan:**
+>
 > - Status markers: `[ NOT STARTED ]` → `[ IN PROGRESS ]` → `[ COMPLETE ✓ ]`
 > - Update this section as each phase finishes. Mark completed tasks with `✓`, note blockers inline.
 > - The **"Next"** line at the end of each phase tells the next Claude session exactly where to pick up.
@@ -498,7 +500,7 @@ dependencies = [
 
 ---
 
-### Phase 1 — Project Scaffold & Dev Infrastructure `[ NOT STARTED ]`
+### Phase 1 — Project Scaffold & Dev Infrastructure `[ COMPLETE ✓ ]`
 
 **Goal:** Runnable project skeleton with linting, formatting, and test config wired up. Nothing functional yet.
 
@@ -535,11 +537,11 @@ ignore_missing_imports = true
 
 **Exit criteria:**
 
-- [ ] `uv sync` completes with no errors
+- [x] `uv sync` completes with no errors
 
-- [ ] `uv run ruff check .` passes on empty stubs
+- [x] `uv run ruff check .` passes on empty stubs
 
-- [ ] `uv run pytest tests/ -v` runs (0 tests, no errors)
+- [x] `uv run pytest tests/ -v` runs (0 tests, no errors)
 
 **Next →** Phase 2: Data Layer
 
@@ -988,7 +990,7 @@ ignore_missing_imports = true
 ### Current Status
 
 ```text
-Phase 1  — Scaffold            [ NOT STARTED ]
+Phase 1  — Scaffold            [ COMPLETE ✓ ]
 Phase 2  — Data Layer          [ NOT STARTED ]
 Phase 3  — Core Agent          [ NOT STARTED ]
 Phase 4  — Desktop Tools       [ NOT STARTED ]

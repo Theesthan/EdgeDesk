@@ -1,0 +1,14 @@
+line-length = 100
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "I", "UP", "N"]
+ignore = []
+
+[lint.isort]
+known-first-party = ["core", "tools", "db", "scheduler", "ui", "schemas"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
