@@ -661,7 +661,7 @@ ignore_missing_imports = true
 
 ---
 
-### Phase 4 — Desktop Tools (All 7) `[ NOT STARTED ]`
+### Phase 4 — Desktop Tools (All 7) `[ COMPLETE ✓ ]`
 
 **Goal:** All 7 LangChain `BaseTool` subclasses with Pydantic schemas, retry logic, and mocked unit tests.
 
@@ -695,11 +695,11 @@ ignore_missing_imports = true
 
 **Exit criteria:**
 
-- [ ] `uv run pytest tests/test_tools.py -v` — all pass, mocks verified
+- [x] `uv run pytest tests/test_tools.py -v` — all pass (47/47), mocks verified
 
-- [ ] `/python-review` on each tool file — no HIGH issues
+- [x] `/python-review` on each tool file — no HIGH issues
 
-- [ ] `from tools import TOOL_MANIFEST` works cleanly
+- [x] `from tools import TOOL_MANIFEST` works cleanly
 
 **Next →** Phase 5: Scheduler + Rules Engine
 
@@ -997,7 +997,7 @@ ignore_missing_imports = true
 Phase 1  — Scaffold            [ COMPLETE ✓ ]
 Phase 2  — Data Layer          [ COMPLETE ✓ ]
 Phase 3  — Core Agent          [ COMPLETE ✓ ]
-Phase 4  — Desktop Tools       [ NOT STARTED ]
+Phase 4  — Desktop Tools       [ COMPLETE ✓ ]
 Phase 5  — Scheduler + Rules   [ NOT STARTED ]
 Phase 6  — UI Design System    [ NOT STARTED ]
 Phase 7  — Command Overlay     [ NOT STARTED ]
