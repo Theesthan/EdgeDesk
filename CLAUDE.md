@@ -547,7 +547,7 @@ ignore_missing_imports = true
 
 ---
 
-### Phase 2 — Data Layer: SQLAlchemy Models + Pydantic Schemas `[ NOT STARTED ]`
+### Phase 2 — Data Layer: SQLAlchemy Models + Pydantic Schemas `[ COMPLETE ✓ ]`
 
 **Goal:** All database models, CRUD ops, FAISS vector store, and Pydantic I/O schemas defined before any agent code.
 
@@ -589,11 +589,11 @@ ignore_missing_imports = true
 
 **Exit criteria:**
 
-- [ ] `uv run pytest tests/test_db.py -v` — all pass
+- [x] `uv run pytest tests/test_db.py -v` — all pass (49/49)
 
-- [ ] `uv run mypy db/ schemas/ --ignore-missing-imports` — no errors
+- [x] `uv run mypy db/ schemas/ --ignore-missing-imports` — no errors (7 source files)
 
-- [ ] All Pydantic schemas have valid + invalid input tests
+- [x] All Pydantic schemas have valid + invalid input tests
 
 **Next →** Phase 3: Core Agent
 
@@ -991,7 +991,7 @@ ignore_missing_imports = true
 
 ```text
 Phase 1  — Scaffold            [ COMPLETE ✓ ]
-Phase 2  — Data Layer          [ NOT STARTED ]
+Phase 2  — Data Layer          [ COMPLETE ✓ ]
 Phase 3  — Core Agent          [ NOT STARTED ]
 Phase 4  — Desktop Tools       [ NOT STARTED ]
 Phase 5  — Scheduler + Rules   [ NOT STARTED ]
