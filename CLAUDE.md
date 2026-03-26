@@ -745,7 +745,7 @@ ignore_missing_imports = true
 
 ---
 
-### Phase 6 — UI Design System & Reusable Widgets `[ NOT STARTED ]`
+### Phase 6 — UI Design System & Reusable Widgets `[ COMPLETE ✓ ]`
 
 **Goal:** Design tokens defined, reusable widget primitives built. No application screens yet — component library only.
 
@@ -775,11 +775,11 @@ ignore_missing_imports = true
 
 **Exit criteria:**
 
-- [ ] `from ui.styles.components import GlassCard, ToggleSwitch, StepPill` — no crash
+- [x] `from ui.styles.components import GlassCard, ToggleSwitch, StepPill` — no crash
 
-- [ ] Visual demo runs: `uv run python ui/styles/components.py`
+- [x] Visual demo runs: `uv run python ui/styles/components.py`
 
-- [ ] No magic number colors or radii anywhere — all use theme constants
+- [x] No magic number colors or radii anywhere — all use theme constants
 
 **Next →** Phase 7: Command Overlay
 
@@ -999,7 +999,7 @@ Phase 2  — Data Layer          [ COMPLETE ✓ ]
 Phase 3  — Core Agent          [ COMPLETE ✓ ]
 Phase 4  — Desktop Tools       [ COMPLETE ✓ ]
 Phase 5  — Scheduler + Rules   [ COMPLETE ✓ ]
-Phase 6  — UI Design System    [ NOT STARTED ]
+Phase 6  — UI Design System    [ COMPLETE ✓ ]
 Phase 7  — Command Overlay     [ NOT STARTED ]
 Phase 8  — Management Panels   [ NOT STARTED ]
 Phase 9  — Full Integration    [ NOT STARTED ]

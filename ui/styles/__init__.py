@@ -1,0 +1,1 @@
+"""EdgeDesk UI styles package."""
