@@ -14,7 +14,15 @@
       "Bash(python -c \"import sys,json; models=json.load\\(sys.stdin\\)[''''models'''']; [print\\(m[''''name'''']\\) for m in models]\")",
       "Bash(python -c \"from langchain.agents import create_react_agent; print\\(''OK''\\)\")",
       "Bash(python -c \"from langchain.agents import create_agent; print\\(''OK''\\)\")",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(.venv/Scripts/python.exe -c \"import torch; print\\(torch.__version__\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"from core.llm import build_llm, health_check; print\\(''LLM import OK''\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \":*)",
+      "Bash(timeout 8 .venv/Scripts/python.exe main.py)",
+      "Bash(echo \"EXIT_CODE:$?\")",
+      "Bash(timeout 12 .venv/Scripts/python.exe main.py)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/ -v --tb=short -q)",
+      "Bash(.venv/Scripts/python.exe -m ruff check .)"
     ]
   }
 }

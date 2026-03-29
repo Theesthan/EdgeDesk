@@ -23,6 +23,14 @@ def main() -> None:
     load_dotenv()
     logger.info("EdgeDesk starting…")
 
+    # Pre-load torch/sentence-transformers BEFORE Qt starts to avoid Windows DLL
+    # initialization failures that occur when these are loaded inside the Qt event loop.
+    try:
+        import db.vector_store as _vs_mod  # noqa: F401
+        logger.debug("sentence-transformers pre-loaded successfully")
+    except Exception as _pre_exc:
+        logger.debug("sentence-transformers pre-load skipped: {}", _pre_exc)
+
     # Qt / qasync imports are deferred so load_dotenv() runs first.
     import qasync  # type: ignore[import]
     from PyQt6.QtWidgets import QApplication
