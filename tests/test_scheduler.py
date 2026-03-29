@@ -46,7 +46,7 @@ class FailingOrchestrator:
 def _make_rule_stub(
     rule_id: str = "r1",
     name: str = "Test Rule",
-    trigger_type: str = "manual",
+    trigger_type: str | None = "manual",
     trigger_config: dict[str, Any] | None = None,
     instruction: str = "do something",
     enabled: bool = True,
@@ -437,7 +437,7 @@ class TestSchedulerEngineFire:
         async with db_session_factory() as session:
             execs = await list_executions(session, rule_id=rule_id)
 
-        assert execs[0].duration_ms >= 0
+        assert execs[0].duration_ms is not None and execs[0].duration_ms >= 0
 
 
 # ===========================================================================

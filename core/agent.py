@@ -9,13 +9,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 
+from langchain.agents import create_agent as create_react_agent  # type: ignore[attr-defined]
 from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import BaseTool
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent  # type: ignore[attr-defined]
 from loguru import logger
 
 from core.prompts import build_system_prompt
@@ -49,7 +49,7 @@ class AgentOrchestrator:
         self._graph = create_react_agent(
             llm,
             tools=tools,
-            prompt=system_msg,
+            system_prompt=system_msg,
             checkpointer=self._checkpointer,
         )
         logger.info(

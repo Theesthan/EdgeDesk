@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/tmp/edgedesk_manifest.txt:*)",
+      "Read(//tmp/**)",
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(uv run:*)",
+      "Bash(curl -s http://localhost:11434/api/tags)",
+      "Bash(where tesseract:*)",
+      "Bash(tesseract --version)",
+      "Read(//c/Program Files/Tesseract-OCR/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Read(//c/Users/thees/**)",
+      "Bash(python -c \"import sys,json; models=json.load\\(sys.stdin\\)[''''models'''']; [print\\(m[''''name'''']\\) for m in models]\")",
+      "Bash(python -c \"from langchain.agents import create_react_agent; print\\(''OK''\\)\")",
+      "Bash(python -c \"from langchain.agents import create_agent; print\\(''OK''\\)\")",
+      "Bash(python -c \":*)"
+    ]
+  }
+}

@@ -12,7 +12,7 @@ without restarting the entire scheduler.
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
+from typing import Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
@@ -21,9 +21,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from db.crud import create_execution, get_rule, list_rules
 from db.models import Rule
 from scheduler.triggers import make_trigger
-
-if TYPE_CHECKING:
-    from core.agent import AgentOrchestrator
 
 
 class SchedulerEngine:
@@ -38,7 +35,7 @@ class SchedulerEngine:
     def __init__(
         self,
         session_factory: async_sessionmaker[AsyncSession],
-        orchestrator: AgentOrchestrator,
+        orchestrator: Any,
     ) -> None:
         self._session_factory = session_factory
         self._orchestrator = orchestrator

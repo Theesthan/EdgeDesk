@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
+from typing import Any
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -41,7 +42,7 @@ def main() -> None:
 # ---------------------------------------------------------------------------
 
 
-async def _async_main(app: object) -> None:  # app: QApplication
+async def _async_main(app: Any) -> None:  # app: QApplication
     """Full boot: DB → VectorStore → LLM → Agent → Scheduler → UI."""
 
     # 1. Database ----------------------------------------------------------
@@ -172,7 +173,7 @@ async def _async_main(app: object) -> None:  # app: QApplication
 # ---------------------------------------------------------------------------
 
 
-def _make_panel_window(title: str, w: int, h: int) -> object:  # returns QWidget
+def _make_panel_window(title: str, w: int, h: int) -> Any:  # returns QWidget
     from PyQt6.QtCore import Qt
     from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
@@ -184,7 +185,7 @@ def _make_panel_window(title: str, w: int, h: int) -> object:  # returns QWidget
     return win
 
 
-def _show_settings(hotkey_mgr: object, session_factory: object) -> None:
+def _show_settings(hotkey_mgr: Any, session_factory: Any) -> None:
     from ui.settings import SettingsDialog
 
     dlg = SettingsDialog()
@@ -208,9 +209,9 @@ def _show_settings(hotkey_mgr: object, session_factory: object) -> None:
 
 
 async def _show_rules(
-    win: object,
-    panel: object,
-    session_factory: object,
+    win: Any,
+    panel: Any,
+    session_factory: Any,
 ) -> None:
     from db.crud import list_rules
 
@@ -238,9 +239,9 @@ async def _show_rules(
 
 
 async def _show_history(
-    win: object,
-    view: object,
-    session_factory: object,
+    win: Any,
+    view: Any,
+    session_factory: Any,
     offset: int,
     *,
     append: bool = False,
@@ -278,9 +279,9 @@ async def _show_history(
 
 async def _run_instruction(
     instruction: str,
-    overlay: object,
-    orchestrator: object,
-    session_factory: object,
+    overlay: Any,
+    orchestrator: Any,
+    session_factory: Any,
 ) -> None:
     """Stream *instruction* through the agent and log the execution result."""
     from db.crud import create_execution
@@ -315,9 +316,9 @@ async def _run_instruction(
 
 async def _on_rule_saved(
     data: dict,
-    session_factory: object,
-    scheduler: object,
-    vector_store: object | None,
+    session_factory: Any,
+    scheduler: Any,
+    vector_store: Any,
 ) -> None:
     from db.crud import create_rule, update_rule
 
@@ -358,8 +359,8 @@ async def _on_rule_saved(
 
 async def _on_rule_deleted(
     rule_id: str,
-    session_factory: object,
-    scheduler: object,
+    session_factory: Any,
+    scheduler: Any,
 ) -> None:
     from db.crud import delete_rule
 
@@ -376,8 +377,8 @@ async def _on_rule_deleted(
 async def _on_rule_toggled(
     rule_id: str,
     enabled: bool,
-    session_factory: object,
-    scheduler: object,
+    session_factory: Any,
+    scheduler: Any,
 ) -> None:
     from db.crud import update_rule
 
@@ -394,7 +395,7 @@ async def _on_rule_toggled(
 async def _on_feedback(
     execution_id: str,
     score: int,
-    session_factory: object,
+    session_factory: Any,
 ) -> None:
     from db.crud import update_feedback
 
@@ -407,7 +408,7 @@ async def _on_feedback(
         logger.error("Failed to record feedback: {}", exc)
 
 
-async def _clear_history(session_factory: object) -> None:
+async def _clear_history(session_factory: Any) -> None:
     from sqlalchemy import delete as sa_delete
 
     from db.models import Execution
@@ -427,8 +428,8 @@ async def _clear_history(session_factory: object) -> None:
 
 
 async def _shutdown(
-    scheduler: object,
-    hotkey_mgr: object,
+    scheduler: Any,
+    hotkey_mgr: Any,
     shutdown_event: asyncio.Event,
 ) -> None:
     logger.info("Shutting down EdgeDesk…")

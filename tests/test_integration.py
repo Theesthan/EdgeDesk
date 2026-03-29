@@ -293,10 +293,10 @@ async def test_on_rule_toggled_updates_enabled(sf) -> None:
     await _on_rule_toggled(rule_id, False, sf, _MockScheduler())
 
     async with sf() as session:
-        rule = await get_rule(session, rule_id)
+        fetched = await get_rule(session, rule_id)
 
-    assert rule is not None
-    assert rule.enabled is False
+    assert fetched is not None
+    assert fetched.enabled is False
 
 
 async def test_on_rule_toggled_scheduler_reload(sf) -> None:

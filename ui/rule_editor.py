@@ -344,8 +344,10 @@ class RuleManagerPanel(QWidget):
         """Populate the left panel with rule cards."""
         while self._cards_layout.count() > 1:
             item = self._cards_layout.takeAt(0)
-            if item and item.widget():
-                item.widget().deleteLater()
+            if item:
+                w = item.widget()
+                if w is not None:
+                    w.deleteLater()
         self._rule_data.clear()
 
         for rule_data in rules:

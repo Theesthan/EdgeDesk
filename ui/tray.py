@@ -7,6 +7,8 @@ connect them to the appropriate panel instances.
 
 from __future__ import annotations
 
+from typing import Any
+
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import QMenu, QSystemTrayIcon, QWidget
@@ -117,7 +119,7 @@ class SystemTrayApp(QSystemTrayIcon):
         menu = QMenu()
         menu.setStyleSheet(_MENU_QSS)
 
-        _entries: list[tuple[str, str, pyqtSignal]] = [
+        _entries: list[tuple[str, str, Any]] = [
             ("fa5s.terminal", "Open Overlay   Alt+Space", self.open_overlay_requested),
             ("fa5s.list", "Rules", self.open_rules_requested),
             ("fa5s.history", "History", self.open_history_requested),
@@ -128,12 +130,14 @@ class SystemTrayApp(QSystemTrayIcon):
         for icon_name, label, signal in _entries:
             icon = qta.icon(icon_name, color=icon_color) if _QTA else QIcon()
             action = menu.addAction(icon, label)
-            action.triggered.connect(signal.emit)
+            if action is not None:
+                action.triggered.connect(signal.emit)
 
         menu.addSeparator()
         quit_icon = qta.icon("fa5s.times", color=icon_color) if _QTA else QIcon()
         quit_action = menu.addAction(quit_icon, "Quit")
-        quit_action.triggered.connect(self.quit_requested.emit)
+        if quit_action is not None:
+            quit_action.triggered.connect(self.quit_requested.emit)
 
         self.setContextMenu(menu)
 

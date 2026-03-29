@@ -5,13 +5,18 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.pool import StaticPool
 
 from db.models import Base
 
 
-def _make_engine() -> tuple:
+def _make_engine() -> AsyncEngine:
     """Create a fresh in-memory async engine with all tables."""
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",

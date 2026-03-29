@@ -125,32 +125,32 @@ class GUITool(BaseTool):
         logger.debug("gui_action action={} kwargs={}", action, kwargs)
         if action == "click":
             try:
-                inp = GUIClickInput(**kwargs)
+                click_inp = GUIClickInput(**kwargs)
             except Exception as exc:
                 return ToolError(tool="gui_click", message=f"Invalid input: {exc}", retryable=False)
-            return self._click(inp)
+            return self._click(click_inp)
         elif action == "type":
             try:
-                inp = GUITypeInput(**kwargs)
+                type_inp = GUITypeInput(**kwargs)
             except Exception as exc:
                 return ToolError(tool="gui_type", message=f"Invalid input: {exc}", retryable=False)
-            return self._type(inp)
+            return self._type(type_inp)
         elif action == "scroll":
             try:
-                inp = GUIScrollInput(**kwargs)
+                scroll_inp = GUIScrollInput(**kwargs)
             except Exception as exc:
                 return ToolError(
                     tool="gui_scroll", message=f"Invalid input: {exc}", retryable=False
                 )
-            return self._scroll(inp)
+            return self._scroll(scroll_inp)
         elif action == "hotkey":
             try:
-                inp = GUIHotkeyInput(**kwargs)
+                hotkey_inp = GUIHotkeyInput(**kwargs)
             except Exception as exc:
                 return ToolError(
                     tool="gui_hotkey", message=f"Invalid input: {exc}", retryable=False
                 )
-            return self._hotkey(inp)
+            return self._hotkey(hotkey_inp)
         else:
             return ToolError(
                 tool="gui_action", message=f"Unknown action: {action!r}", retryable=False

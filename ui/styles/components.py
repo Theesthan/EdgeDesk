@@ -6,7 +6,14 @@ Run this file directly for a live visual demo: uv run python ui/styles/component
 
 from __future__ import annotations
 
-from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt, pyqtProperty, pyqtSignal
+from PyQt6.QtCore import (  # type: ignore[attr-defined]
+    QEasingCurve,
+    QPropertyAnimation,
+    QSize,
+    Qt,
+    pyqtProperty,
+    pyqtSignal,
+)
 from PyQt6.QtGui import QBrush, QColor, QPainter
 from PyQt6.QtWidgets import (
     QAbstractButton,
@@ -88,7 +95,7 @@ class StatusDot(QWidget):
     def dot_opacity(self) -> float:  # type: ignore[override]
         return self.__opacity
 
-    @dot_opacity.setter  # type: ignore[override]
+    @dot_opacity.setter  # type: ignore[override, no-redef]
     def dot_opacity(self, v: float) -> None:
         self.__opacity = v
         self.update()
@@ -153,7 +160,7 @@ class ToggleSwitch(QAbstractButton):
     def toggle_t(self) -> float:  # type: ignore[override]
         return self.__t
 
-    @toggle_t.setter  # type: ignore[override]
+    @toggle_t.setter  # type: ignore[override, no-redef]
     def toggle_t(self, v: float) -> None:
         self.__t = v
         self.update()
@@ -256,7 +263,7 @@ class AnimatedTabBar(QWidget):
     def indicator_x(self) -> float:  # type: ignore[override]
         return self.__ind_x
 
-    @indicator_x.setter  # type: ignore[override]
+    @indicator_x.setter  # type: ignore[override, no-redef]
     def indicator_x(self, v: float) -> None:
         self.__ind_x = v
         self.update()

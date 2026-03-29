@@ -148,26 +148,28 @@ class FileTool(BaseTool):
         logger.debug("file_op action={} path={}", action, path or src)
         if action == "read":
             try:
-                inp = FileReadInput(path=path)
+                read_inp = FileReadInput(path=path)
             except Exception as exc:
                 return ToolError(tool="file_read", message=f"Invalid input: {exc}", retryable=False)
-            return self._read(inp.path, encoding)
+            return self._read(read_inp.path, encoding)
         elif action == "write":
             try:
-                inp = FileWriteInput(
+                write_inp = FileWriteInput(
                     path=path, content=content, encoding=encoding, overwrite=overwrite
                 )
             except Exception as exc:
                 return ToolError(
                     tool="file_write", message=f"Invalid input: {exc}", retryable=False
                 )
-            return self._write(inp.path, inp.content, inp.encoding, inp.overwrite)
+            return self._write(
+                write_inp.path, write_inp.content, write_inp.encoding, write_inp.overwrite
+            )
         elif action == "move":
             try:
-                inp = FileMoveInput(src=src, dst=dst)
+                move_inp = FileMoveInput(src=src, dst=dst)
             except Exception as exc:
                 return ToolError(tool="file_move", message=f"Invalid input: {exc}", retryable=False)
-            return self._move(inp.src, inp.dst)
+            return self._move(move_inp.src, move_inp.dst)
         elif action == "delete":
             return self._delete(path)
         elif action == "list":

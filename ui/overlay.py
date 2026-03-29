@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import sys
 
-from PyQt6.QtCore import (
+from PyQt6.QtCore import (  # type: ignore[attr-defined]
     QEasingCurve,
     QEvent,
     QObject,
@@ -104,7 +104,7 @@ class InputBar(QLineEdit):
     def focus_t(self) -> float:  # type: ignore[override]
         return self.__focus_t
 
-    @focus_t.setter  # type: ignore[override]
+    @focus_t.setter  # type: ignore[override, no-redef]
     def focus_t(self, v: float) -> None:
         self.__focus_t = v
         self.update()
@@ -182,7 +182,8 @@ class StepLogArea(QScrollArea):
             self._height_anim.setEndValue(self._MAX_H)
             self._height_anim.start()
 
-        self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+        if bar := self.verticalScrollBar():
+            bar.setValue(bar.maximum())
         return pill
 
     def get_step_pill(self, step_id: str) -> StepPill | None:
@@ -197,8 +198,10 @@ class StepLogArea(QScrollArea):
         self._pills.clear()
         while self._layout.count() > 1:  # keep the trailing stretch
             item = self._layout.takeAt(0)
-            if item and item.widget():
-                item.widget().deleteLater()
+            if item:
+                w = item.widget()
+                if w is not None:
+                    w.deleteLater()
         self.setMaximumHeight(0)
 
 

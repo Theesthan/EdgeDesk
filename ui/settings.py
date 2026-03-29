@@ -7,6 +7,7 @@ Settings are persisted to the project .env file via python-dotenv.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
@@ -161,8 +162,7 @@ class SettingsDialog(QDialog):
 
     def _build_general_tab(self) -> QWidget:
         page = self._page()
-        layout = page.layout()
-        assert layout is not None
+        layout = cast(QVBoxLayout, page.layout())
 
         layout.addWidget(self._section_lbl("Data Directory"))
         data_lbl = QLabel(str(Path.home() / ".edgedesk"), page)
@@ -183,8 +183,7 @@ class SettingsDialog(QDialog):
 
     def _build_llm_tab(self) -> QWidget:
         page = self._page()
-        layout = page.layout()
-        assert layout is not None
+        layout = cast(QVBoxLayout, page.layout())
 
         layout.addWidget(self._section_lbl("Model"))
         self._model_edit = QLineEdit(page)
@@ -220,8 +219,7 @@ class SettingsDialog(QDialog):
 
     def _build_hotkeys_tab(self) -> QWidget:
         page = self._page()
-        layout = page.layout()
-        assert layout is not None
+        layout = cast(QVBoxLayout, page.layout())
 
         layout.addWidget(self._section_lbl("Overlay Hotkey"))
         self._hotkey_edit = QKeySequenceEdit(page)
@@ -242,8 +240,7 @@ class SettingsDialog(QDialog):
 
     def _build_privacy_tab(self) -> QWidget:
         page = self._page()
-        layout = page.layout()
-        assert layout is not None
+        layout = cast(QVBoxLayout, page.layout())
 
         layout.addWidget(self._section_lbl("Data Management"))
 

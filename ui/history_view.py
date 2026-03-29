@@ -221,7 +221,8 @@ class HistoryView(QWidget):
         self._scroll.setStyleSheet(
             "QScrollArea { border: none; background: transparent; }" + scrollbar_qss()
         )
-        self._scroll.verticalScrollBar().valueChanged.connect(self._on_scroll)
+        if _vsb := self._scroll.verticalScrollBar():
+            _vsb.valueChanged.connect(self._on_scroll)
 
         self._content = QWidget()
         self._content.setStyleSheet("background: transparent;")
@@ -247,8 +248,10 @@ class HistoryView(QWidget):
         if not append:
             while self._content_layout.count() > 1:
                 item = self._content_layout.takeAt(0)
-                if item and item.widget():
-                    item.widget().deleteLater()
+                if item:
+                    w = item.widget()
+                    if w is not None:
+                        w.deleteLater()
             self._total_loaded = 0
 
         current_date: str | None = None
@@ -286,6 +289,6 @@ class HistoryView(QWidget):
         if self._loading:
             return
         bar = self._scroll.verticalScrollBar()
-        if bar.maximum() > 0 and value >= bar.maximum() - 100:
+        if bar is not None and bar.maximum() > 0 and value >= bar.maximum() - 100:
             self._loading = True
             self.load_more_requested.emit(self._total_loaded)

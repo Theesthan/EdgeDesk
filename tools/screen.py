@@ -7,6 +7,7 @@ agent step — cache key is the (region, time-bucket) tuple.
 
 from __future__ import annotations
 
+import os
 import time
 from functools import lru_cache
 from typing import Any
@@ -18,6 +19,11 @@ from loguru import logger
 from PIL import Image
 
 from schemas.models import ScreenCaptureInput, ScreenCaptureOutput, ToolError
+
+# Configure Tesseract path from environment (Windows default)
+_tess_cmd = os.environ.get("TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+if os.path.isfile(_tess_cmd):
+    pytesseract.pytesseract.tesseract_cmd = _tess_cmd
 
 # Cache TTL bucket size in seconds (500 ms)
 _CACHE_BUCKET_MS: int = 500

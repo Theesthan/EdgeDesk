@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(while read:*)",
+      "Bash(do wc:*)",
+      "Bash(done)",
+      "Read(//c/Users/thees/Desktop/Eko/Eko/EdgeDesk/{sum+=$1; print $0} END {print \"\"\"\"\"\"\"\"/**)",
+      "Bash(du -sh ./*)",
+      "Bash(wc -l ./tests/test_*.py)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/thees/Desktop/Eko/Eko/EdgeDesk/**)",
+      "Bash(python -c \"import sys; print\\(f''Python version: {sys.version}''\\)\")",
+      "Bash(ls -la ./core/*.py ./db/*.py ./scheduler/*.py ./tools/*.py ./ui/*.py)",
+      "Bash(grep -v \"^$\")"
+    ]
+  }
+}

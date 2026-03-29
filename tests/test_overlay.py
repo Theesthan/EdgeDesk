@@ -159,8 +159,8 @@ def test_input_bar_focus_t_setter() -> None:
         if app is None:
             pytest.skip("Cannot create QApplication")
         bar = InputBar()
-        bar.focus_t = 0.5
-        assert bar.focus_t == pytest.approx(0.5)
+        bar.focus_t = 0.5  # type: ignore[method-assign]
+        assert bar.focus_t == pytest.approx(0.5)  # type: ignore[method-assign]
         bar.deleteLater()
     except ImportError as exc:
         pytest.skip(f"PyQt6 not available: {exc}")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -391,7 +392,7 @@ def test_email_list_output() -> None:
 # ===========================================================================
 
 
-def _make_mock_model(dim: int = 384) -> object:
+def _make_mock_model(dim: int = 384) -> Any:
     """Return a mock SentenceTransformer that returns deterministic embeddings."""
     from unittest.mock import MagicMock
 
