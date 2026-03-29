@@ -22,7 +22,8 @@
       "Bash(echo \"EXIT_CODE:$?\")",
       "Bash(timeout 12 .venv/Scripts/python.exe main.py)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/ -v --tb=short -q)",
-      "Bash(.venv/Scripts/python.exe -m ruff check .)"
+      "Bash(.venv/Scripts/python.exe -m ruff check .)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_overlay.py -v --tb=short)"
     ]
   }
 }

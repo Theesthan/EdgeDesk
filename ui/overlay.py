@@ -294,7 +294,7 @@ class OverlayWindow(QWidget):
         self._pos_anim.stop()
         try:
             self._opacity_anim.finished.disconnect(self._on_dismissed)
-        except RuntimeError:
+        except (RuntimeError, TypeError):
             pass
 
         self._input.clear()
@@ -327,7 +327,7 @@ class OverlayWindow(QWidget):
         self._pos_anim.stop()
         try:
             self._opacity_anim.finished.disconnect(self._on_dismissed)
-        except RuntimeError:
+        except (RuntimeError, TypeError):
             pass
         self._opacity_anim.setStartValue(self.windowOpacity())
         self._opacity_anim.setEndValue(0.0)
@@ -384,7 +384,7 @@ class OverlayWindow(QWidget):
     def _on_dismissed(self) -> None:
         try:
             self._opacity_anim.finished.disconnect(self._on_dismissed)
-        except RuntimeError:
+        except (RuntimeError, TypeError):
             pass
         self.hide()
 
