@@ -58,6 +58,61 @@ def select_model(vram_mb: int | None = None, override: str | None = None) -> str
     return model
 
 
+async def select_best_available_model(
+    preferred: str,
+    base_url: str = DEFAULT_BASE_URL,
+) -> str:
+    """Return *preferred* if it fits in available RAM, else the largest model that does.
+
+    Uses 85% of available RAM as the safe ceiling to leave headroom for the OS and app.
+    Falls back to *preferred* if the check cannot complete for any reason.
+    """
+    try:
+        import psutil
+
+        available_mb = psutil.virtual_memory().available // (1024 * 1024)
+        safe_limit_mb = int(available_mb * 0.85)
+
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(f"{base_url}/api/tags")
+            resp.raise_for_status()
+            models: list[dict] = resp.json().get("models", [])
+
+        if not models:
+            return preferred
+
+        candidates = sorted(
+            [(m["name"], m["size"] // (1024 * 1024)) for m in models],
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        pref_size = next((sz for name, sz in candidates if name == preferred), None)
+        if pref_size is None or pref_size <= safe_limit_mb:
+            return preferred
+
+        fitting = [(name, sz) for name, sz in candidates if sz <= safe_limit_mb]
+        if fitting:
+            chosen = fitting[0][0]
+            logger.warning(
+                "Model '{}' needs ~{} MB RAM but only {} MB safe — auto-switching to '{}'",
+                preferred,
+                pref_size,
+                safe_limit_mb,
+                chosen,
+            )
+            return chosen
+
+        logger.warning(
+            "No installed model fits in available RAM ({} MB safe). Trying '{}' anyway.",
+            safe_limit_mb,
+            preferred,
+        )
+    except Exception as exc:
+        logger.debug("Auto model-memory check failed: {}", exc)
+
+    return preferred
+
+
 async def health_check(base_url: str = DEFAULT_BASE_URL) -> None:
     """Verify Ollama is running. Raises `ConnectionError` if unreachable."""
     try:

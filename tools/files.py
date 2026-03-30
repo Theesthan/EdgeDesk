@@ -17,6 +17,7 @@ from loguru import logger
 from schemas.models import (
     FileMoveInput,
     FileMoveOutput,
+    FileOpInput,
     FileReadInput,
     FileReadOutput,
     FileWriteInput,
@@ -41,7 +42,7 @@ class FileTool(BaseTool):
 
     name: str = "file_op"
     description: str = "Read, write, move, delete, or list local files."
-    args_schema: type = FileReadInput  # schema dispatched by action field
+    args_schema: type = FileOpInput
 
     # ------------------------------------------------------------------ #
     # Individual actions

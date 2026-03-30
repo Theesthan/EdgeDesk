@@ -11,6 +11,7 @@ without restarting the entire scheduler.
 
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
 
@@ -135,11 +136,25 @@ class SchedulerEngine:
         status: str = "failed"
 
         try:
-            async for _token in self._orchestrator.run(instruction):
-                pass  # consume the stream; UI streaming handled separately
             status = "success"
+            async for token in self._orchestrator.run(instruction):
+                # AgentOrchestrator yields a ToolError JSON on failure instead of raising
+                try:
+                    payload = json.loads(token)
+                    if (
+                        isinstance(payload, dict)
+                        and "tool" in payload
+                        and "retryable" in payload
+                    ):
+                        status = "failed"
+                        logger.warning(
+                            "Rule {} agent error: {}", rule_id, payload.get("message", "")
+                        )
+                except (json.JSONDecodeError, ValueError):
+                    pass  # Normal text token
         except Exception as exc:
             logger.error("Rule {} raised during execution: {}", rule_id, exc)
+            status = "failed"
 
         duration_ms: int = int(time.monotonic() * 1000) - start_ms
         try:

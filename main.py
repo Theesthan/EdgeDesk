@@ -71,7 +71,7 @@ async def _async_main(app: Any) -> None:  # app: QApplication
         logger.warning("VectorStore unavailable: {} — semantic search disabled", exc)
 
     # 3. Ollama health check (non-fatal) -----------------------------------
-    from core.llm import build_llm, health_check
+    from core.llm import build_llm, health_check, select_best_available_model, select_model
 
     ollama_ok = True
     try:
@@ -85,7 +85,9 @@ async def _async_main(app: Any) -> None:  # app: QApplication
     from core.agent import AgentOrchestrator
     from tools import TOOL_MANIFEST
 
-    llm = build_llm()
+    preferred_model = select_model()
+    resolved_model = await select_best_available_model(preferred_model)
+    llm = build_llm(model=resolved_model)
     orchestrator = AgentOrchestrator(llm, TOOL_MANIFEST)
 
     # 5. Scheduler --------------------------------------------------------

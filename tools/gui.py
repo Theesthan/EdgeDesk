@@ -18,6 +18,7 @@ from langchain_core.tools import BaseTool
 from loguru import logger
 
 from schemas.models import (
+    GUIActionInput,
     GUIActionOutput,
     GUIClickInput,
     GUIHotkeyInput,
@@ -64,7 +65,7 @@ class GUITool(BaseTool):
 
     name: str = "gui_action"
     description: str = "Perform GUI actions: click, type text, scroll, or press hotkeys."
-    args_schema: type = GUIClickInput  # overridden per action via run()
+    args_schema: type = GUIActionInput
 
     # ------------------------------------------------------------------ #
     # Internal dispatch — called by _run after input parsing

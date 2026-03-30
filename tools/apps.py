@@ -13,7 +13,7 @@ import psutil
 from langchain_core.tools import BaseTool
 from loguru import logger
 
-from schemas.models import AppLaunchInput, AppLaunchOutput, ToolError
+from schemas.models import AppControlInput, AppLaunchInput, AppLaunchOutput, ToolError
 
 
 class AppTool(BaseTool):
@@ -21,7 +21,7 @@ class AppTool(BaseTool):
 
     name: str = "app_control"
     description: str = "Launch an application by command or list running processes."
-    args_schema: type = AppLaunchInput
+    args_schema: type = AppControlInput
 
     def _launch(self, inp: AppLaunchInput) -> AppLaunchOutput | ToolError:
         try:

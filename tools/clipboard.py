@@ -11,7 +11,7 @@ import pyperclip
 from langchain_core.tools import BaseTool
 from loguru import logger
 
-from schemas.models import ClipboardReadOutput, ClipboardWriteInput, ToolError
+from schemas.models import ClipboardInput, ClipboardReadOutput, ClipboardWriteInput, ToolError
 
 
 class ClipboardTool(BaseTool):
@@ -19,7 +19,7 @@ class ClipboardTool(BaseTool):
 
     name: str = "clipboard"
     description: str = "Read current clipboard text or write new text to clipboard."
-    args_schema: type = ClipboardWriteInput
+    args_schema: type = ClipboardInput
 
     def _read(self) -> ClipboardReadOutput | ToolError:
         try:

@@ -90,6 +90,28 @@ class GUIHotkeyInput(BaseModel):
     keys: list[str] = Field(min_length=1, description="Keys to press simultaneously.")
 
 
+class GUIActionInput(BaseModel):
+    """Unified schema for all GUI actions passed to the gui_action tool."""
+
+    action: Literal["click", "type", "scroll", "hotkey"] = Field(
+        description="Action to perform: click, type, scroll, or hotkey."
+    )
+    # click / scroll fields
+    x: int = Field(default=0, ge=0, description="X pixel coordinate (click/scroll).")
+    y: int = Field(default=0, ge=0, description="Y pixel coordinate (click/scroll).")
+    button: Literal["left", "right", "middle"] = Field(
+        default="left", description="Mouse button (click only)."
+    )
+    clicks: int = Field(default=1, ge=1, le=3, description="Number of clicks.")
+    # type fields
+    text: str = Field(default="", description="Text to type (type action).")
+    interval: float = Field(default=0.05, ge=0.0, description="Seconds between keystrokes.")
+    # hotkey fields
+    keys: list[str] = Field(
+        default_factory=list, description="Keys to press simultaneously (hotkey action)."
+    )
+
+
 class GUIActionOutput(BaseModel):
     """Result of any GUI action."""
 
@@ -159,6 +181,20 @@ class FileMoveOutput(BaseModel):
     new_path: str
 
 
+class FileOpInput(BaseModel):
+    """Unified schema for all file operations passed to the file_op tool."""
+
+    action: Literal["read", "write", "move", "delete", "list"] = Field(
+        description="Action: read, write, move, delete, or list files."
+    )
+    path: str = Field(default="", description="File path (read/write/delete/list).")
+    content: str = Field(default="", description="Content to write (write action).")
+    encoding: str = Field(default="utf-8")
+    overwrite: bool = Field(default=True, description="Overwrite existing file (write action).")
+    src: str = Field(default="", description="Source path (move action).")
+    dst: str = Field(default="", description="Destination path (move action).")
+
+
 # ---------------------------------------------------------------------------
 # App Launcher
 # ---------------------------------------------------------------------------
@@ -180,6 +216,19 @@ class AppLaunchOutput(BaseModel):
     name: str
 
 
+class AppControlInput(BaseModel):
+    """Unified schema for app_control tool."""
+
+    action: Literal["launch", "list"] = Field(
+        description="Action: launch an app or list running processes."
+    )
+    command: list[str] = Field(
+        default_factory=list,
+        description="Command and args list (launch action), e.g. ['notepad', 'file.txt'].",
+    )
+    cwd: str | None = Field(default=None, description="Working directory (launch action).")
+
+
 # ---------------------------------------------------------------------------
 # Clipboard
 # ---------------------------------------------------------------------------
@@ -195,6 +244,15 @@ class ClipboardReadOutput(BaseModel):
     """Current clipboard text."""
 
     text: str
+
+
+class ClipboardInput(BaseModel):
+    """Unified schema for clipboard tool."""
+
+    action: Literal["read", "write"] = Field(
+        description="Action: read current clipboard text or write new text."
+    )
+    text: str = Field(default="", description="Text to copy (write action).")
 
 
 # ---------------------------------------------------------------------------
