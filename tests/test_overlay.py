@@ -48,7 +48,7 @@ def test_overlay_window_has_required_attributes() -> None:
     assert hasattr(OverlayWindow, "on_step_update")
     assert hasattr(OverlayWindow, "show_overlay")
     assert hasattr(OverlayWindow, "dismiss")
-    assert OverlayWindow._WIDTH == 680
+    assert OverlayWindow._WIDTH >= 800  # dynamic: min 800, grows with screen width
 
 
 def test_input_bar_has_focus_property() -> None:

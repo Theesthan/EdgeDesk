@@ -3,10 +3,14 @@
 Uses `mss` for fast screenshots and `pytesseract` for OCR.
 Results are cached for 500 ms to avoid redundant captures within the same
 agent step — cache key is the (region, time-bucket) tuple.
+
+`capture_screen_text()` is a module-level helper that main._run_instruction
+calls to inject the current screen state into each per-step prompt.
 """
 
 from __future__ import annotations
 
+import asyncio
 import os
 import time
 from functools import lru_cache
@@ -25,7 +29,7 @@ _tess_cmd = os.environ.get("TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tes
 if os.path.isfile(_tess_cmd):
     pytesseract.pytesseract.tesseract_cmd = _tess_cmd
 
-# Cache TTL bucket size in seconds (500 ms)
+# Cache TTL bucket size in ms — one bucket per 500 ms window
 _CACHE_BUCKET_MS: int = 500
 
 
@@ -54,6 +58,20 @@ def _cached_capture(
     return text.strip()
 
 
+def capture_screen_text(region: tuple[int, int, int, int] | None = None) -> str:
+    """Synchronous helper — captures screen and returns OCR text.
+
+    Used by main._run_instruction to inject the current screen state into
+    each per-step prompt before running the agent for that step.
+    Returns an empty string on any error (non-fatal).
+    """
+    try:
+        return _cached_capture(region, _time_bucket())
+    except Exception as exc:
+        logger.debug("capture_screen_text failed: {}", exc)
+        return ""
+
+
 class ScreenTool(BaseTool):
     """Capture the screen and extract text via OCR."""
 
@@ -74,4 +92,5 @@ class ScreenTool(BaseTool):
             return ToolError(tool="screen_capture", message=str(exc), retryable=True)
 
     async def _arun(self, **kwargs: Any) -> ScreenCaptureOutput | ToolError:
-        return self._run(**kwargs)
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, lambda: self._run(**kwargs))

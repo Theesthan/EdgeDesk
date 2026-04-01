@@ -1,8 +1,11 @@
 """EdgeDesk agent orchestrator.
 
 Wraps a langgraph ReAct graph and exposes a single `run()` async generator
-that streams tokens to the caller.  The orchestrator is stateful per session
-(via MemorySaver checkpointing) and persists a summary to SQLite separately.
+that streams tokens to the caller.
+
+The orchestrator supports per-call thread IDs so callers can isolate context
+between individual steps (main._run_instruction uses this to keep each step's
+context window small and prevent small models from stopping early).
 """
 
 from __future__ import annotations
@@ -25,15 +28,11 @@ from schemas.models import ToolError
 class AgentOrchestrator:
     """Runs a langgraph ReAct agent and streams response tokens.
 
-    The agent graph is built once on construction and reused for all
-    `run()` calls within the same session (memory is preserved via
-    the MemorySaver checkpointer keyed to `session_id`).
-
     Args:
-        llm: A LangChain-compatible chat model (ChatOllama in production,
-             a mock in tests).
-        tools: List of LangChain `BaseTool` instances from `tools/__init__.py`.
-        session_id: Unique key used for checkpointing and memory isolation.
+        llm: A LangChain-compatible chat model.
+        tools: List of LangChain BaseTool instances from tools/__init__.py.
+        session_id: Default thread ID for checkpointing. Can be overridden
+            per call via the thread_id param of run().
     """
 
     def __init__(
@@ -43,6 +42,7 @@ class AgentOrchestrator:
         session_id: str = "default",
     ) -> None:
         self._llm = llm
+        self._tools = tools
         self._session_id = session_id
         self._checkpointer = MemorySaver()
         system_msg = SystemMessage(content=build_system_prompt([t.name for t in tools]))
@@ -58,14 +58,26 @@ class AgentOrchestrator:
             [t.name for t in tools],
         )
 
-    async def run(self, instruction: str) -> AsyncIterator[str]:
+    async def run(
+        self,
+        instruction: str,
+        thread_id: str | None = None,
+    ) -> AsyncIterator[str]:
         """Execute *instruction* and stream response tokens.
 
-        Yields string tokens as they arrive from the LLM.  On error, yields
-        a JSON-serialised `ToolError` as the final (and only) token.
+        Args:
+            instruction: The prompt / instruction to run.
+            thread_id: Optional thread ID override. Pass a unique value per
+                step to give each step a fresh conversation context with a
+                small context window. Defaults to self._session_id.
+
+        Yields:
+            String tokens as they arrive from the LLM. On error yields a
+            JSON-serialised ToolError as the final token.
         """
-        config: RunnableConfig = {"configurable": {"thread_id": self._session_id}}
-        logger.info("Agent run — session='{}': {!r}", self._session_id, instruction[:80])
+        tid = thread_id if thread_id is not None else self._session_id
+        config: RunnableConfig = {"configurable": {"thread_id": tid}}
+        logger.info("Agent run — thread='{}': {!r}", tid, instruction[:80])
         try:
             yielded_any = False
             async for event in self._graph.astream_events(
@@ -80,7 +92,7 @@ class AgentOrchestrator:
                         yielded_any = True
                         yield content
 
-            # Fallback for non-streaming models: read final state
+            # Fallback for non-streaming models
             if not yielded_any:
                 state = await self._graph.aget_state(config)
                 messages = state.values.get("messages", [])
@@ -102,5 +114,5 @@ class AgentOrchestrator:
 
     @property
     def session_id(self) -> str:
-        """The session identifier for this orchestrator instance."""
+        """The default session identifier for this orchestrator instance."""
         return self._session_id

@@ -47,10 +47,16 @@ class _MockOrchestrator:
 
     def __init__(self, tokens: list[str] | None = None) -> None:
         self._tokens = tokens or ["Hello", " World"]
+        self._llm = None  # required by _run_instruction planner lookup
+        self._tools: list = []  # required for tool_names_str
         self.calls: list[str] = []
+        self.thread_ids: list[str] = []
 
-    async def run(self, instruction: str) -> AsyncIterator[str]:
+    async def run(
+        self, instruction: str, thread_id: str | None = None
+    ) -> AsyncIterator[str]:
         self.calls.append(instruction)
+        self.thread_ids.append(thread_id or "")
         for token in self._tokens:
             yield token
 
@@ -58,7 +64,12 @@ class _MockOrchestrator:
 class _ErrorOrchestrator:
     """Raises RuntimeError on first iteration."""
 
-    async def run(self, instruction: str) -> AsyncIterator[str]:
+    _llm = None
+    _tools: list = []
+
+    async def run(
+        self, instruction: str, thread_id: str | None = None
+    ) -> AsyncIterator[str]:
         raise RuntimeError("Mock LLM error")
         yield  # pragma: no cover — makes this an async generator
 
@@ -119,13 +130,16 @@ async def test_init_db_creates_tables(tmp_path: Path) -> None:
 
 async def test_run_instruction_success(sf) -> None:
     """A successful run should create an Execution record with status 'success'."""
+    from unittest.mock import patch
+
     from db.crud import list_executions
     from main import _run_instruction
 
     overlay = _MockOverlay()
     orch = _MockOrchestrator(["tok1", "tok2"])
 
-    await _run_instruction("open browser", overlay, orch, sf)
+    with patch("tools.screen.capture_screen_text", return_value="Desktop"):
+        await _run_instruction("open browser", overlay, orch, sf)
 
     async with sf() as session:
         execs = await list_executions(session)
@@ -138,24 +152,30 @@ async def test_run_instruction_success(sf) -> None:
 
 async def test_run_instruction_tokens_reach_overlay(sf) -> None:
     """Tokens yielded by the orchestrator must be forwarded to overlay.on_token."""
+    from unittest.mock import patch
+
     from main import _run_instruction
 
     overlay = _MockOverlay()
     orch = _MockOrchestrator(["alpha", "beta"])
 
-    await _run_instruction("do something", overlay, orch, sf)
+    with patch("tools.screen.capture_screen_text", return_value="Desktop"):
+        await _run_instruction("do something", overlay, orch, sf)
 
     assert overlay.tokens == ["alpha", "beta"]
 
 
 async def test_run_instruction_failure_logs_failed_status(sf) -> None:
     """An orchestrator that raises should log status 'failed'."""
+    from unittest.mock import patch
+
     from db.crud import list_executions
     from main import _run_instruction
 
     overlay = _MockOverlay()
 
-    await _run_instruction("bad task", overlay, _ErrorOrchestrator(), sf)
+    with patch("tools.screen.capture_screen_text", return_value="Desktop"):
+        await _run_instruction("bad task", overlay, _ErrorOrchestrator(), sf)
 
     async with sf() as session:
         execs = await list_executions(session)
@@ -166,12 +186,15 @@ async def test_run_instruction_failure_logs_failed_status(sf) -> None:
 
 async def test_run_instruction_step_updates_sent(sf) -> None:
     """overlay.on_step_update must be called at least for 'running' and final state."""
+    from unittest.mock import patch
+
     from main import _run_instruction
 
     overlay = _MockOverlay()
     orch = _MockOrchestrator(["x"])
 
-    await _run_instruction("task", overlay, orch, sf)
+    with patch("tools.screen.capture_screen_text", return_value="Desktop"):
+        await _run_instruction("task", overlay, orch, sf)
 
     statuses = [s for _, s, _ in overlay.steps]
     assert "running" in statuses

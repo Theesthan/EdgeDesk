@@ -136,12 +136,19 @@ class TestGUITool:
         mock_click.assert_called_once_with(100, 200, clicks=1, button="left")
 
     def test_type_success(self) -> None:
-        with patch("tools.gui.pyautogui.typewrite") as mock_type:
+        """type action uses clipboard paste (ctrl+v), not typewrite."""
+        with (
+            patch("tools.gui.pyperclip.copy") as mock_copy,
+            patch("tools.gui.pyperclip.paste", return_value=""),
+            patch("tools.gui.pyautogui.hotkey") as mock_hotkey,
+            patch("tools.gui.time.sleep"),
+        ):
             tool = self._make_tool()
             result = tool._run(action="type", text="hello", interval=0.05)
         assert isinstance(result, GUIActionOutput)
         assert result.success is True
-        mock_type.assert_called_once_with("hello", interval=0.05)
+        mock_copy.assert_any_call("hello")
+        mock_hotkey.assert_any_call("ctrl", "v")
 
     def test_scroll_success(self) -> None:
         with patch("tools.gui.pyautogui.scroll") as mock_scroll:

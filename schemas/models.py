@@ -2,13 +2,16 @@
 
 Every tool's input AND output has a typed model here.
 The agent never receives or returns raw dicts — always use these schemas.
+
+Validators on action fields coerce single-element lists to strings so small
+LLMs that wrap scalar values in lists (e.g. action=['launch']) still work.
 """
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # ---------------------------------------------------------------------------
 # Shared
@@ -93,8 +96,11 @@ class GUIHotkeyInput(BaseModel):
 class GUIActionInput(BaseModel):
     """Unified schema for all GUI actions passed to the gui_action tool."""
 
-    action: Literal["click", "type", "scroll", "hotkey"] = Field(
-        description="Action to perform: click, type, scroll, or hotkey."
+    action: Literal["click", "type", "scroll", "hotkey", "wait"] = Field(
+        description=(
+            "Action to perform. Must be exactly one of: click, type, scroll, hotkey, wait. "
+            "Use wait after launching apps."
+        )
     )
     # click / scroll fields
     x: int = Field(default=0, ge=0, description="X pixel coordinate (click/scroll).")
@@ -110,6 +116,26 @@ class GUIActionInput(BaseModel):
     keys: list[str] = Field(
         default_factory=list, description="Keys to press simultaneously (hotkey action)."
     )
+    # wait fields
+    seconds: float = Field(
+        default=2.0, ge=0.1, le=30.0, description="Seconds to wait (wait action)."
+    )
+
+    @field_validator("action", mode="before")
+    @classmethod
+    def coerce_action(cls, v: Any) -> Any:
+        """Accept ['click'] in addition to 'click' — guards against LLM list-wrapping."""
+        if isinstance(v, list) and len(v) >= 1:
+            return v[0]
+        return v
+
+    @field_validator("keys", mode="before")
+    @classmethod
+    def coerce_keys(cls, v: Any) -> Any:
+        """Accept 'ctrl' in addition to ['ctrl']."""
+        if isinstance(v, str):
+            return [v]
+        return v
 
 
 class GUIActionOutput(BaseModel):
@@ -194,6 +220,13 @@ class FileOpInput(BaseModel):
     src: str = Field(default="", description="Source path (move action).")
     dst: str = Field(default="", description="Destination path (move action).")
 
+    @field_validator("action", mode="before")
+    @classmethod
+    def coerce_action(cls, v: Any) -> Any:
+        if isinstance(v, list) and len(v) >= 1:
+            return v[0]
+        return v
+
 
 # ---------------------------------------------------------------------------
 # App Launcher
@@ -217,16 +250,54 @@ class AppLaunchOutput(BaseModel):
 
 
 class AppControlInput(BaseModel):
-    """Unified schema for app_control tool."""
+    """Unified schema for app_control tool.
+
+    Examples
+    --------
+    Launch Spotify:  action='launch', command=['spotify']
+    Launch Notepad:  action='launch', command=['notepad']
+    List processes:  action='list'
+    """
 
     action: Literal["launch", "list"] = Field(
-        description="Action: launch an app or list running processes."
+        description=(
+            "Must be the string 'launch' (to open an app) or 'list' (to show running apps). "
+            "Never pass a list — just the plain string."
+        )
     )
     command: list[str] = Field(
         default_factory=list,
-        description="Command and args list (launch action), e.g. ['notepad', 'file.txt'].",
+        description=(
+            "App name as a list with one string, e.g. ['spotify'] or ['notepad']. "
+            "Required when action='launch'."
+        ),
     )
     cwd: str | None = Field(default=None, description="Working directory (launch action).")
+
+    @field_validator("action", mode="before")
+    @classmethod
+    def coerce_action(cls, v: Any) -> Any:
+        """Accept ['launch'] in addition to 'launch' — guards against LLM list-wrapping."""
+        if isinstance(v, list) and len(v) >= 1:
+            return str(v[0])
+        return v
+
+    @field_validator("command", mode="before")
+    @classmethod
+    def coerce_command(cls, v: Any) -> Any:
+        """Accept 'spotify' in addition to ['spotify']."""
+        if isinstance(v, str):
+            return [v]
+        return v
+
+    @model_validator(mode="after")
+    def validate_launch_has_command(self) -> "AppControlInput":
+        if self.action == "launch" and not self.command:
+            raise ValueError(
+                "command must not be empty when action='launch'. "
+                "Example: action='launch', command=['spotify']"
+            )
+        return self
 
 
 # ---------------------------------------------------------------------------
@@ -253,6 +324,13 @@ class ClipboardInput(BaseModel):
         description="Action: read current clipboard text or write new text."
     )
     text: str = Field(default="", description="Text to copy (write action).")
+
+    @field_validator("action", mode="before")
+    @classmethod
+    def coerce_action(cls, v: Any) -> Any:
+        if isinstance(v, list) and len(v) >= 1:
+            return v[0]
+        return v
 
 
 # ---------------------------------------------------------------------------

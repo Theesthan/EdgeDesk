@@ -17,7 +17,7 @@ from loguru import logger
 DEFAULT_MODEL: str = "llama3.2:latest"
 DEFAULT_BASE_URL: str = "http://localhost:11434"
 DEFAULT_TEMPERATURE: float = 0.1
-DEFAULT_NUM_CTX: int = 4096
+DEFAULT_NUM_CTX: int = 8192
 
 
 def detect_vram_mb() -> int:

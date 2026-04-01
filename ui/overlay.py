@@ -294,7 +294,7 @@ class OverlayWindow(QWidget):
     open_history_requested: pyqtSignal = pyqtSignal()
     open_settings_requested: pyqtSignal = pyqtSignal()
 
-    _WIDTH: int = 680
+    _WIDTH: int = 960  # fallback; overridden at runtime from screen geometry
 
     def __init__(
         self,
@@ -304,6 +304,15 @@ class OverlayWindow(QWidget):
         super().__init__(parent)
         self._orchestrator = orchestrator
         self._current_step_id: str | None = None
+
+        # Compute dimensions from actual screen geometry
+        _primary = QApplication.primaryScreen()
+        if _primary:
+            _geo = _primary.availableGeometry()
+            # Width: 58% of screen, min 800, max 1280
+            OverlayWindow._WIDTH = max(800, min(1280, _geo.width() * 58 // 100))
+            # Step log height: 68% of screen height, min 520, max 960
+            StepLogArea._MAX_H = max(520, min(960, _geo.height() * 68 // 100))
 
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint
@@ -535,7 +544,8 @@ class OverlayWindow(QWidget):
         if screen:
             rect = screen.availableGeometry()
             x = rect.center().x() - self._WIDTH // 2
-            y = rect.center().y() - 80
+            # Position near top of screen so the expanding step log stays on-screen
+            y = rect.top() + rect.height() * 6 // 100
             return QPoint(x, y)
         return QPoint(100, 100)
 

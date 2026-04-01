@@ -300,12 +300,35 @@ async def _run_instruction(
     orchestrator: Any,
     session_factory: Any,
 ) -> None:
-    """Plan then execute *instruction*, streaming progress to the overlay."""
+    """Plan then execute *instruction* step-by-step with screenshot-per-step loop.
+
+    Architecture:
+    1. TaskPlanner decomposes instruction into ordered atomic steps.
+    2. For each step:
+       a. Take a fresh screenshot so the agent sees the current screen state.
+       b. Build a focused single-step prompt (small context → reliable small models).
+       c. Run the agent with a unique thread_id (no accumulated context from prev steps).
+       d. Stream tokens to the overlay's output pill.
+       e. Mark the step label pill done/failed.
+    3. Log overall execution to DB.
+    """
+    import uuid
+
     from core.planner import TaskPlanner
+    from core.prompts import STEP_PROMPT
     from db.crud import create_execution
+    from tools.screen import capture_screen_text
 
     start_ms = int(time.monotonic() * 1000)
     status = "failed"
+    run_id = uuid.uuid4().hex[:8]
+
+    # Get tool names for the step prompt
+    tool_names_str = (
+        ", ".join(t.name for t in orchestrator._tools)  # type: ignore[attr-defined]
+        if hasattr(orchestrator, "_tools")
+        else "screen_capture, gui_action, app_control"
+    )
 
     # ------------------------------------------------------------------
     # Phase 1 — Planning
@@ -323,33 +346,75 @@ async def _run_instruction(
     n = len(steps)
     plan_lines = "\n".join(f"  {i + 1}. {s}" for i, s in enumerate(steps))
     plan_text = f"📋 Plan ({n} step{'s' if n != 1 else ''}):\n{plan_lines}"
-
-    # Update pill text while still "running", then flip to done (text preserved)
     overlay.on_step_update("planning", "running", plan_text)  # type: ignore[attr-defined]
     overlay.on_step_update("planning", "done", "")  # type: ignore[attr-defined]
 
     # ------------------------------------------------------------------
-    # Phase 2 — Execution
+    # Phase 2 — Execute each step individually with screenshot injection
     # ------------------------------------------------------------------
-    numbered = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(steps))
-    enriched = (
-        f"Task: {instruction}\n\n"
-        f"Your plan:\n{numbered}\n\n"
-        f"Execute this plan step by step. "
-        f"Use the observe-screenshot-act-verify loop for each step. "
-        f"Announce each step as you start it: 'Step N: <action>'."
-    )
+    failed_count = 0
 
-    overlay.on_step_update("agent_run", "running", "Thinking\u2026")  # type: ignore[attr-defined]
+    for i, step in enumerate(steps):
+        step_label_id = f"step_{i}_label"
+        step_num_str = f"Step {i + 1}/{n}"
 
-    try:
-        async for token in orchestrator.run(enriched):  # type: ignore[attr-defined]
-            overlay.on_token(token)  # type: ignore[attr-defined]
+        # Show the step label pill (spinning)
+        overlay.on_step_update(  # type: ignore[attr-defined]
+            step_label_id, "running", f"⚙️ {step_num_str}: {step}"
+        )
+        # Output pill — tokens stream here (reused for each step, text replaced)
+        overlay.on_step_update("output", "running", "Thinking\u2026")  # type: ignore[attr-defined]
+
+        # --- Take screenshot to observe current screen state ---
+        loop = asyncio.get_event_loop()
+        screen_text = await loop.run_in_executor(None, capture_screen_text)
+        # Trim to keep prompt compact for small models
+        screen_summary = screen_text[:600].strip() if screen_text else "(screen unavailable)"
+
+        # --- Build focused single-step prompt ---
+        step_prompt = STEP_PROMPT.format(
+            task=instruction,
+            step_num=i + 1,
+            total=n,
+            step_desc=step,
+            screen_text=screen_summary,
+        )
+
+        # --- Run the agent with a fresh thread (no accumulated context) ---
+        thread_id = f"{run_id}_step_{i}"
+        step_ok = True
+        try:
+            async for token in orchestrator.run(step_prompt, thread_id=thread_id):  # type: ignore[attr-defined]
+                overlay.on_token(token)  # type: ignore[attr-defined]
+            overlay.on_step_update("output", "done", "")  # type: ignore[attr-defined]
+            overlay.on_step_update(step_label_id, "done", "")  # type: ignore[attr-defined]
+            logger.info("Step {}/{} done: {}", i + 1, n, step[:60])
+        except Exception as exc:
+            logger.error("Step {}/{} failed: {}", i + 1, n, exc)
+            overlay.on_step_update("output", "failed", f"Error: {exc}")  # type: ignore[attr-defined]
+            overlay.on_step_update(  # type: ignore[attr-defined]
+                step_label_id, "failed", f"❌ {step_num_str}: {step}"
+            )
+            step_ok = False
+            failed_count += 1
+
+        # Brief pause so the screen settles before next screenshot
+        await asyncio.sleep(0.3)
+
+    # ------------------------------------------------------------------
+    # Phase 3 — Final summary pill
+    # ------------------------------------------------------------------
+    if failed_count == 0:
         status = "success"
-        overlay.on_step_update("agent_run", "done", "")  # type: ignore[attr-defined]
-    except Exception as exc:
-        logger.error("Instruction execution error: {}", exc)
-        overlay.on_step_update("agent_run", "failed", f"Error: {exc}")  # type: ignore[attr-defined]
+        overlay.on_step_update(  # type: ignore[attr-defined]
+            "final", "done", f"✅ Done — all {n} step{'s' if n != 1 else ''} completed"
+        )
+    else:
+        overlay.on_step_update(  # type: ignore[attr-defined]
+            "final",
+            "failed",
+            f"⚠️ Completed with {failed_count} failed step{'s' if failed_count != 1 else ''}",
+        )
 
     # ------------------------------------------------------------------
     # Log to DB

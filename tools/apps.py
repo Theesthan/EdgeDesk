@@ -8,6 +8,7 @@ common Windows install directories before giving up.
 
 from __future__ import annotations
 
+import asyncio
 import shutil
 import subprocess
 from pathlib import Path
@@ -115,7 +116,7 @@ class AppTool(BaseTool):
     """Launch an application or list running processes."""
 
     name: str = "app_control"
-    description: str = "Launch an application by command or list running processes."
+    description: str = "Launch app: action='launch', command=['spotify']. List procs: action='list'."
     args_schema: type = AppControlInput
 
     def _launch(self, inp: AppLaunchInput) -> AppLaunchOutput | ToolError:
@@ -167,4 +168,5 @@ class AppTool(BaseTool):
             )
 
     async def _arun(self, **kwargs: Any) -> Any:  # type: ignore[override]
-        return self._run(**kwargs)
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, lambda: self._run(**kwargs))

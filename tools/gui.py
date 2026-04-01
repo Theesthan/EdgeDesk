@@ -1,10 +1,15 @@
 """GUI automation tool via PyAutoGUI.
 
-Provides click, type, scroll, and hotkey actions with automatic retry
+Provides click, type, scroll, hotkey, and wait actions with automatic retry
 logic (max 3 attempts, exponential backoff: 0.5s, 1.0s, 2.0s).
 
-pyautogui.PAUSE is set to 50 ms at module load for reliability.
-FailSafeException (mouse at corner) is caught and returned as ToolError.
+Key implementation notes:
+- `type` uses clipboard paste (pyperclip + ctrl+v) instead of typewrite so it
+  works reliably in Electron apps (Spotify, Discord, VS Code, etc.)
+- `wait` pauses execution for N seconds — use it after launching apps to let
+  them fully load before taking further action
+- pyautogui.PAUSE is set to 50 ms at module load for reliability
+- FailSafeException (mouse at corner) is caught and returned as ToolError
 """
 
 from __future__ import annotations
@@ -14,6 +19,7 @@ import time
 from typing import Any
 
 import pyautogui
+import pyperclip
 from langchain_core.tools import BaseTool
 from loguru import logger
 
@@ -61,14 +67,14 @@ def _with_retry(fn: Any, *args: Any, **kwargs: Any) -> Any:
 
 
 class GUITool(BaseTool):
-    """Click, type, scroll, or press hotkeys on the desktop GUI."""
+    """Click, type, scroll, press hotkeys, or wait on the desktop GUI."""
 
     name: str = "gui_action"
-    description: str = "Perform GUI actions: click, type text, scroll, or press hotkeys."
+    description: str = "Click, type (via paste), scroll, press hotkeys, or wait for apps to load."
     args_schema: type = GUIActionInput
 
     # ------------------------------------------------------------------ #
-    # Internal dispatch — called by _run after input parsing
+    # Internal dispatch
     # ------------------------------------------------------------------ #
 
     def _click(self, inp: GUIClickInput) -> GUIActionOutput | ToolError:
@@ -83,9 +89,30 @@ class GUITool(BaseTool):
             return ToolError(tool="gui_click", message=str(exc), retryable=True)
 
     def _type(self, inp: GUITypeInput) -> GUIActionOutput | ToolError:
+        """Type text using clipboard paste for reliability in all apps.
+
+        Saves and restores the existing clipboard content so we don't clobber
+        the user's clipboard unexpectedly.
+        """
         try:
-            _with_retry(pyautogui.typewrite, inp.text, interval=inp.interval)
-            return GUIActionOutput(success=True, message=f"Typed {len(inp.text)} chars")
+            # Save existing clipboard
+            try:
+                original = pyperclip.paste()
+            except Exception:
+                original = ""
+
+            pyperclip.copy(inp.text)
+            time.sleep(0.05)  # let clipboard settle
+            _with_retry(pyautogui.hotkey, "ctrl", "v")
+            time.sleep(0.05)
+
+            # Restore original clipboard
+            try:
+                pyperclip.copy(original)
+            except Exception:
+                pass
+
+            return GUIActionOutput(success=True, message=f"Typed {len(inp.text)} chars via paste")
         except pyautogui.FailSafeException:
             return ToolError(
                 tool="gui_type", message="FailSafe: mouse moved to corner.", retryable=False
@@ -117,8 +144,13 @@ class GUITool(BaseTool):
         except Exception as exc:
             return ToolError(tool="gui_hotkey", message=str(exc), retryable=True)
 
+    def _wait(self, seconds: float) -> GUIActionOutput:
+        clamped = max(0.1, min(seconds, 30.0))
+        time.sleep(clamped)
+        return GUIActionOutput(success=True, message=f"Waited {clamped:.1f}s")
+
     # ------------------------------------------------------------------ #
-    # LangChain interface — action dispatched by "action" field
+    # LangChain interface
     # ------------------------------------------------------------------ #
 
     def _run(self, action: str, **kwargs: Any) -> GUIActionOutput | ToolError:  # type: ignore[override]
@@ -126,32 +158,35 @@ class GUITool(BaseTool):
         logger.debug("gui_action action={} kwargs={}", action, kwargs)
         if action == "click":
             try:
-                click_inp = GUIClickInput(**kwargs)
+                inp = GUIClickInput(**kwargs)
             except Exception as exc:
                 return ToolError(tool="gui_click", message=f"Invalid input: {exc}", retryable=False)
-            return self._click(click_inp)
+            return self._click(inp)
         elif action == "type":
             try:
-                type_inp = GUITypeInput(**kwargs)
+                inp = GUITypeInput(**kwargs)
             except Exception as exc:
                 return ToolError(tool="gui_type", message=f"Invalid input: {exc}", retryable=False)
-            return self._type(type_inp)
+            return self._type(inp)
         elif action == "scroll":
             try:
-                scroll_inp = GUIScrollInput(**kwargs)
+                inp = GUIScrollInput(**kwargs)
             except Exception as exc:
                 return ToolError(
                     tool="gui_scroll", message=f"Invalid input: {exc}", retryable=False
                 )
-            return self._scroll(scroll_inp)
+            return self._scroll(inp)
         elif action == "hotkey":
             try:
-                hotkey_inp = GUIHotkeyInput(**kwargs)
+                inp = GUIHotkeyInput(**kwargs)
             except Exception as exc:
                 return ToolError(
                     tool="gui_hotkey", message=f"Invalid input: {exc}", retryable=False
                 )
-            return self._hotkey(hotkey_inp)
+            return self._hotkey(inp)
+        elif action == "wait":
+            seconds = float(kwargs.get("seconds", 2.0))
+            return self._wait(seconds)
         else:
             return ToolError(
                 tool="gui_action", message=f"Unknown action: {action!r}", retryable=False
