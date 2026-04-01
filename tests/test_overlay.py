@@ -327,6 +327,7 @@ def test_overlay_on_step_update_done_clears_current() -> None:
 
 
 def test_overlay_on_step_update_updates_existing_pill() -> None:
+    """When transitioning to 'done', text is preserved (streamed content stays visible)."""
     try:
         from ui.overlay import OverlayWindow
 
@@ -338,7 +339,27 @@ def test_overlay_on_step_update_updates_existing_pill() -> None:
         overlay.on_step_update("s1", "done", "Finished")
         pill = overlay._steps.get_step_pill("s1")
         assert pill is not None
-        assert pill._text_lbl.text() == "Finished"
+        # Text is preserved from "running" state — streamed content stays visible
+        assert pill._text_lbl.text() == "Start"
+        overlay.deleteLater()
+    except ImportError as exc:
+        pytest.skip(f"PyQt6 not available: {exc}")
+
+
+def test_overlay_on_step_update_failed_updates_text() -> None:
+    """When transitioning to 'failed', text IS updated to show the error message."""
+    try:
+        from ui.overlay import OverlayWindow
+
+        app = _make_app()
+        if app is None:
+            pytest.skip("Cannot create QApplication")
+        overlay = OverlayWindow()
+        overlay.on_step_update("s1", "running", "Start")
+        overlay.on_step_update("s1", "failed", "Error: something went wrong")
+        pill = overlay._steps.get_step_pill("s1")
+        assert pill is not None
+        assert pill._text_lbl.text() == "Error: something went wrong"
         overlay.deleteLater()
     except ImportError as exc:
         pytest.skip(f"PyQt6 not available: {exc}")

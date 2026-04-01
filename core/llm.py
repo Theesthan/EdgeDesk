@@ -1,8 +1,8 @@
 """Local LLM connection via Ollama.
 
-Detects available VRAM and selects the best model automatically.
+Auto-selects the best installed model that fits in available RAM.
 Provides an async health check so the app can warn users if Ollama
-is not running, without hard-failing on startup.
+is not running without hard-failing on startup.
 """
 
 from __future__ import annotations
@@ -14,9 +14,7 @@ import httpx
 from langchain_ollama import ChatOllama
 from loguru import logger
 
-VRAM_HIGH_THRESHOLD_MB: int = 8192
-MODEL_HIGH_VRAM: str = "mistral-nemo:12b"
-MODEL_LOW_VRAM: str = "llama3.2"
+DEFAULT_MODEL: str = "llama3.2:latest"
 DEFAULT_BASE_URL: str = "http://localhost:11434"
 DEFAULT_TEMPERATURE: float = 0.1
 DEFAULT_NUM_CTX: int = 4096
@@ -26,11 +24,7 @@ def detect_vram_mb() -> int:
     """Query nvidia-smi for total VRAM in MB. Returns 0 on any error."""
     try:
         result = subprocess.run(
-            [
-                "nvidia-smi",
-                "--query-gpu=memory.total",
-                "--format=csv,noheader,nounits",
-            ],
+            ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
             capture_output=True,
             text=True,
             timeout=5,
@@ -42,20 +36,14 @@ def detect_vram_mb() -> int:
     return 0
 
 
-def select_model(vram_mb: int | None = None, override: str | None = None) -> str:
-    """Choose the best available Ollama model.
+def select_model(override: str | None = None) -> str:
+    """Return the model to use.
 
-    Priority: explicit *override* > OLLAMA_MODEL env var > VRAM-based auto-select.
+    Priority: explicit *override* → OLLAMA_MODEL env var → DEFAULT_MODEL.
     """
     if override:
         return override
-    env_model = os.environ.get("OLLAMA_MODEL")
-    if env_model:
-        return env_model
-    vram = vram_mb if vram_mb is not None else detect_vram_mb()
-    model = MODEL_HIGH_VRAM if vram >= VRAM_HIGH_THRESHOLD_MB else MODEL_LOW_VRAM
-    logger.info("Auto-selected model: {} (VRAM: {} MB)", model, vram)
-    return model
+    return os.environ.get("OLLAMA_MODEL", DEFAULT_MODEL)
 
 
 async def select_best_available_model(
@@ -64,7 +52,7 @@ async def select_best_available_model(
 ) -> str:
     """Return *preferred* if it fits in available RAM, else the largest model that does.
 
-    Uses 85% of available RAM as the safe ceiling to leave headroom for the OS and app.
+    Uses 85% of available RAM as the safe ceiling.
     Falls back to *preferred* if the check cannot complete for any reason.
     """
     try:
@@ -94,7 +82,7 @@ async def select_best_available_model(
         if fitting:
             chosen = fitting[0][0]
             logger.warning(
-                "Model '{}' needs ~{} MB RAM but only {} MB safe — auto-switching to '{}'",
+                "Model '{}' needs ~{} MB RAM but only {} MB safe — switching to '{}'",
                 preferred,
                 pref_size,
                 safe_limit_mb,
@@ -114,7 +102,7 @@ async def select_best_available_model(
 
 
 async def health_check(base_url: str = DEFAULT_BASE_URL) -> None:
-    """Verify Ollama is running. Raises `ConnectionError` if unreachable."""
+    """Verify Ollama is running. Raises ``ConnectionError`` if unreachable."""
     try:
         async with httpx.AsyncClient(timeout=3.0) as client:
             response = await client.get(f"{base_url}/api/tags")
@@ -130,9 +118,9 @@ def build_llm(
     model: str | None = None,
     base_url: str | None = None,
 ) -> ChatOllama:
-    """Construct and return a `ChatOllama` instance.
+    """Construct and return a ``ChatOllama`` instance.
 
-    Does NOT perform the health check — call `health_check()` separately.
+    Does NOT perform the health check — call ``health_check()`` separately.
     """
     resolved_model = model or select_model()
     resolved_url = base_url or os.environ.get("OLLAMA_BASE_URL", DEFAULT_BASE_URL)

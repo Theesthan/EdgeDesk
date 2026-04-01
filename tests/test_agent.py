@@ -15,9 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.agent import AgentOrchestrator
 from core.llm import (
-    MODEL_HIGH_VRAM,
-    MODEL_LOW_VRAM,
-    VRAM_HIGH_THRESHOLD_MB,
+    DEFAULT_MODEL,
     detect_vram_mb,
     health_check,
     select_model,
@@ -102,20 +100,9 @@ class MockStreamingChatModel(BaseChatModel):
 # ===========================================================================
 
 
-def test_select_model_high_vram() -> None:
-    assert select_model(vram_mb=VRAM_HIGH_THRESHOLD_MB) == MODEL_HIGH_VRAM
-
-
-def test_select_model_high_vram_above_threshold() -> None:
-    assert select_model(vram_mb=16384) == MODEL_HIGH_VRAM
-
-
-def test_select_model_low_vram() -> None:
-    assert select_model(vram_mb=4096) == MODEL_LOW_VRAM
-
-
-def test_select_model_zero_vram() -> None:
-    assert select_model(vram_mb=0) == MODEL_LOW_VRAM
+def test_select_model_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+    assert select_model() == DEFAULT_MODEL
 
 
 def test_select_model_explicit_override() -> None:
@@ -123,9 +110,13 @@ def test_select_model_explicit_override() -> None:
 
 
 def test_select_model_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("OLLAMA_MODEL", "phi4:14b")
-    # Clear any override to let env take priority
-    assert select_model(vram_mb=0) == "phi4:14b"
+    monkeypatch.setenv("OLLAMA_MODEL", "llama3.1:8b")
+    assert select_model() == "llama3.1:8b"
+
+
+def test_select_model_override_beats_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OLLAMA_MODEL", "llama3.2:latest")
+    assert select_model(override="gemma:7b") == "gemma:7b"
 
 
 def test_select_model_override_beats_env(monkeypatch: pytest.MonkeyPatch) -> None:

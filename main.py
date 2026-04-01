@@ -300,23 +300,60 @@ async def _run_instruction(
     orchestrator: Any,
     session_factory: Any,
 ) -> None:
-    """Stream *instruction* through the agent and log the execution result."""
+    """Plan then execute *instruction*, streaming progress to the overlay."""
+    from core.planner import TaskPlanner
     from db.crud import create_execution
 
     start_ms = int(time.monotonic() * 1000)
-    step_id = "agent_run"
-    overlay.on_step_update(step_id, "running", "Thinking…")  # type: ignore[attr-defined]
     status = "failed"
 
+    # ------------------------------------------------------------------
+    # Phase 1 — Planning
+    # ------------------------------------------------------------------
+    overlay.on_step_update("planning", "running", "🧠 Planning...")  # type: ignore[attr-defined]
+
+    steps: list[str] = []
     try:
-        async for token in orchestrator.run(instruction):  # type: ignore[attr-defined]
+        planner = TaskPlanner(orchestrator._llm)  # type: ignore[attr-defined]
+        steps = await planner.decompose(instruction)
+    except Exception as exc:
+        logger.warning("Planner failed (falling back to single step): {}", exc)
+        steps = [instruction]
+
+    n = len(steps)
+    plan_lines = "\n".join(f"  {i + 1}. {s}" for i, s in enumerate(steps))
+    plan_text = f"📋 Plan ({n} step{'s' if n != 1 else ''}):\n{plan_lines}"
+
+    # Update pill text while still "running", then flip to done (text preserved)
+    overlay.on_step_update("planning", "running", plan_text)  # type: ignore[attr-defined]
+    overlay.on_step_update("planning", "done", "")  # type: ignore[attr-defined]
+
+    # ------------------------------------------------------------------
+    # Phase 2 — Execution
+    # ------------------------------------------------------------------
+    numbered = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(steps))
+    enriched = (
+        f"Task: {instruction}\n\n"
+        f"Your plan:\n{numbered}\n\n"
+        f"Execute this plan step by step. "
+        f"Use the observe-screenshot-act-verify loop for each step. "
+        f"Announce each step as you start it: 'Step N: <action>'."
+    )
+
+    overlay.on_step_update("agent_run", "running", "Thinking\u2026")  # type: ignore[attr-defined]
+
+    try:
+        async for token in orchestrator.run(enriched):  # type: ignore[attr-defined]
             overlay.on_token(token)  # type: ignore[attr-defined]
         status = "success"
-        overlay.on_step_update(step_id, "done", "Done")  # type: ignore[attr-defined]
+        overlay.on_step_update("agent_run", "done", "")  # type: ignore[attr-defined]
     except Exception as exc:
         logger.error("Instruction execution error: {}", exc)
-        overlay.on_step_update(step_id, "failed", f"Error: {exc}")  # type: ignore[attr-defined]
+        overlay.on_step_update("agent_run", "failed", f"Error: {exc}")  # type: ignore[attr-defined]
 
+    # ------------------------------------------------------------------
+    # Log to DB
+    # ------------------------------------------------------------------
     duration_ms = int(time.monotonic() * 1000) - start_ms
     try:
         async with session_factory() as session:  # type: ignore[attr-defined]

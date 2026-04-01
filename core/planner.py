@@ -1,8 +1,7 @@
 """Task decomposition planner.
 
 Takes a high-level natural language instruction and uses the LLM to break it
-into an ordered list of concrete sub-steps, which are then fed one-by-one to
-the agent executor.
+into an ordered list of concrete sub-steps.
 """
 
 from __future__ import annotations
@@ -13,16 +12,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage
 from loguru import logger
 
-_DECOMPOSE_PROMPT = """\
-You are a task planner. Break the following task into 3-7 ordered, concrete steps.
-
-Task: {instruction}
-
-Rules:
-- Each step must be a single, atomic action (open an app, click a button, type text, etc.)
-- Use a numbered list: "1. ...", "2. ...", etc.
-- No explanations — just the numbered list.
-"""
+from core.prompts import DECOMPOSE_PROMPT
 
 _STEP_PATTERN: re.Pattern[str] = re.compile(r"^\s*\d+[\.\)]\s*(.+)$")
 
@@ -40,10 +30,10 @@ class TaskPlanner:
     async def decompose(self, instruction: str) -> list[str]:
         """Return an ordered list of sub-steps for *instruction*.
 
-        Falls back to `[instruction]` (single step) if the LLM output
+        Falls back to ``[instruction]`` (single step) if the LLM output
         cannot be parsed as a numbered list.
         """
-        prompt = _DECOMPOSE_PROMPT.format(instruction=instruction)
+        prompt = DECOMPOSE_PROMPT.format(instruction=instruction)
         response = await self._llm.ainvoke([HumanMessage(content=prompt)])
         steps = self._parse_steps(str(response.content))
         if not steps:
@@ -51,10 +41,6 @@ class TaskPlanner:
             return [instruction]
         logger.debug("Planner decomposed '{}' into {} steps.", instruction[:60], len(steps))
         return steps
-
-    # ------------------------------------------------------------------
-    # Private helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _parse_steps(text: str) -> list[str]:

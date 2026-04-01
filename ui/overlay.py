@@ -443,22 +443,47 @@ class OverlayWindow(QWidget):
 
     # -- Agent output slots --------------------------------------------------
 
+    # Placeholder strings that get replaced by the first real streamed token
+    _TOKEN_PLACEHOLDERS: frozenset[str] = frozenset({
+        "Thinking\u2026", "Thinking...", "\u26a1 Executing...", "Executing...", "",
+    })
+
     def on_token(self, token: str) -> None:
-        """Append a streamed LLM token to the current running step pill."""
+        """Append a streamed LLM token to the current running step pill.
+
+        The first token replaces any initial placeholder text (e.g. "Thinking…")
+        so the streamed response starts cleanly.
+        """
         if self._current_step_id is None:
             self._current_step_id = "step_auto"
             self._steps.add_step_pill(self._current_step_id, token, "running")
         else:
             pill = self._steps.get_step_pill(self._current_step_id)
             if pill:
-                pill.set_text(pill._text_lbl.text() + token)
+                current = pill._text_lbl.text()
+                if current in self._TOKEN_PLACEHOLDERS:
+                    pill.set_text(token)
+                else:
+                    pill.set_text(current + token)
 
     def on_step_update(self, step_id: str, status: str, text: str) -> None:
-        """Create or update a named step pill."""
+        """Create or update a named step pill.
+
+        When transitioning to *done*, the existing streamed text is preserved
+        (only the status indicator updates). When transitioning to *failed*, the
+        error text replaces the content. New pills get *text* as their initial content.
+        """
         existing = self._steps.get_step_pill(step_id)
         if existing:
-            existing.set_text(text)
-            existing.set_status(status)
+            if status == "done":
+                # Keep whatever was streamed — just flip the status icon/colour
+                existing.set_status(status)
+            elif status == "failed":
+                existing.set_text(text)
+                existing.set_status(status)
+            else:
+                existing.set_text(text)
+                existing.set_status(status)
         else:
             self._steps.add_step_pill(step_id, text, status)
         self._current_step_id = step_id if status == "running" else None
