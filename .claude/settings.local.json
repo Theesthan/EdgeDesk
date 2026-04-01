@@ -27,7 +27,10 @@
       "Bash(.venv/Scripts/python.exe -m pytest tests/ --tb=short -q)",
       "Bash(timeout 20 .venv/Scripts/python.exe main.py)",
       "Bash(echo \"EXIT:$?\")",
-      "Bash(timeout 60 .venv/Scripts/python.exe main.py)"
+      "Bash(timeout 60 .venv/Scripts/python.exe main.py)",
+      "Bash(timeout 5 .venv/Scripts/python.exe ui/styles/components.py)",
+      "Bash(timeout 5 .venv/Scripts/python.exe -c \"from ui.styles.components import GlassCard, StepPill, SpinnerIcon; print\\(''components import OK''\\); s = SpinnerIcon\\(\\); print\\(''SpinnerIcon OK''\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"from ui.styles.components import GlassCard, StepPill, SpinnerIcon; print\\(''components import OK''\\)\")"
     ]
   }
 }

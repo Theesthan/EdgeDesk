@@ -23,7 +23,10 @@ from PyQt6.QtCore import (  # type: ignore[attr-defined]
 from PyQt6.QtGui import QBrush, QColor, QMouseEvent, QPainter
 from PyQt6.QtWidgets import (
     QApplication,
+    QHBoxLayout,
+    QLabel,
     QLineEdit,
+    QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
@@ -33,13 +36,25 @@ from ui.styles.components import StepPill
 from ui.styles.qss import scrollbar_qss
 from ui.styles.theme import (
     ACCENT_PRIMARY,
+    BG_ELEVATED,
     FONT_SIZE_BODY,
     GLASS_BG,
     GLASS_BORDER,
+    RADIUS_MD,
     RADIUS_XL,
+    SPACE_2,
     SPACE_4,
     TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    TEXT_TERTIARY,
 )
+
+try:
+    import qtawesome as qta  # type: ignore[import]
+
+    _QTA = True
+except ImportError:
+    _QTA = False
 
 # ---------------------------------------------------------------------------
 # DWM helper (Windows only)
@@ -71,6 +86,59 @@ def _apply_dwm_blur(window: QWidget) -> None:
         )
     except Exception:
         pass
+
+
+# ---------------------------------------------------------------------------
+# DragBar — draggable header strip
+# ---------------------------------------------------------------------------
+
+
+class _DragBar(QWidget):
+    """Thin header strip that lets the user drag the overlay window."""
+
+    def __init__(self, window: QWidget, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._win = window
+        self._drag_pos: QPoint | None = None
+        self.setCursor(Qt.CursorShape.SizeAllCursor)
+
+    def mousePressEvent(self, event: object) -> None:  # type: ignore[override]
+        if event.button() == Qt.MouseButton.LeftButton:  # type: ignore[attr-defined]
+            self._drag_pos = (
+                event.globalPosition().toPoint()  # type: ignore[attr-defined]
+                - self._win.frameGeometry().topLeft()
+            )
+        super().mousePressEvent(event)  # type: ignore[arg-type]
+
+    def mouseMoveEvent(self, event: object) -> None:  # type: ignore[override]
+        if (
+            event.buttons() == Qt.MouseButton.LeftButton  # type: ignore[attr-defined]
+            and self._drag_pos is not None
+        ):
+            self._win.move(
+                event.globalPosition().toPoint() - self._drag_pos  # type: ignore[attr-defined]
+            )
+        super().mouseMoveEvent(event)  # type: ignore[arg-type]
+
+    def mouseReleaseEvent(self, event: object) -> None:  # type: ignore[override]
+        self._drag_pos = None
+        super().mouseReleaseEvent(event)  # type: ignore[arg-type]
+
+
+def _icon_btn(icon_name: str, tooltip: str, parent: QWidget) -> QPushButton:
+    """Create a small flat icon-only toolbar button."""
+    btn = QPushButton(parent)
+    btn.setToolTip(tooltip)
+    btn.setFixedSize(28, 28)
+    btn.setCursor(Qt.CursorShape.PointingHandCursor)
+    btn.setStyleSheet(
+        f"QPushButton {{ background: transparent; border: none; border-radius: {RADIUS_MD}px; }}"
+        f"QPushButton:hover {{ background: {BG_ELEVATED}; }}"
+        f"QPushButton:pressed {{ background: {GLASS_BORDER}; }}"
+    )
+    if _QTA:
+        btn.setIcon(qta.icon(icon_name, color=TEXT_SECONDARY))
+    return btn
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +290,9 @@ class OverlayWindow(QWidget):
     """
 
     instruction_submitted: pyqtSignal = pyqtSignal(str)
+    open_rules_requested: pyqtSignal = pyqtSignal()
+    open_history_requested: pyqtSignal = pyqtSignal()
+    open_settings_requested: pyqtSignal = pyqtSignal()
 
     _WIDTH: int = 680
 
@@ -270,6 +341,42 @@ class OverlayWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, SPACE_4)
         layout.setSpacing(0)
 
+        # Header: drag handle + toolbar buttons
+        self._header = _DragBar(self, self._card)
+        self._header.setFixedHeight(36)
+        self._header.setStyleSheet("background: transparent;")
+        header_row = QHBoxLayout(self._header)
+        header_row.setContentsMargins(SPACE_4, 0, SPACE_2, 0)
+        header_row.setSpacing(SPACE_2)
+
+        lbl = QLabel("EdgeDesk", self._header)
+        lbl.setStyleSheet(
+            f"color: {TEXT_TERTIARY}; font-size: 11px; font-weight: 600; background: transparent;"
+        )
+        header_row.addWidget(lbl)
+        header_row.addStretch()
+
+        self._btn_rules = _icon_btn("fa5s.list-alt", "Rules", self._header)
+        self._btn_history = _icon_btn("fa5s.history", "History", self._header)
+        self._btn_settings = _icon_btn("fa5s.cog", "Settings", self._header)
+        self._btn_new_chat = _icon_btn("fa5s.plus-circle", "New Chat", self._header)
+
+        self._btn_rules.clicked.connect(self.open_rules_requested.emit)
+        self._btn_history.clicked.connect(self.open_history_requested.emit)
+        self._btn_settings.clicked.connect(self.open_settings_requested.emit)
+        self._btn_new_chat.clicked.connect(self._on_new_chat)
+
+        for btn in (self._btn_rules, self._btn_history, self._btn_settings, self._btn_new_chat):
+            header_row.addWidget(btn)
+
+        layout.addWidget(self._header)
+
+        # Separator line
+        sep = QWidget(self._card)
+        sep.setFixedHeight(1)
+        sep.setStyleSheet(f"background: {GLASS_BORDER};")
+        layout.addWidget(sep)
+
         self._input = InputBar(self._card)
         self._input.returnPressed.connect(self._on_return)
         layout.addWidget(self._input)
@@ -289,17 +396,17 @@ class OverlayWindow(QWidget):
     # -- Public API ----------------------------------------------------------
 
     def show_overlay(self) -> None:
-        """Reset state, center on screen, and animate the overlay into view."""
+        """Center on screen and animate the overlay into view.
+
+        Does NOT clear the step log — previous responses stay visible.
+        The log resets only when the user submits a new query or clicks New Chat.
+        """
         self._opacity_anim.stop()
         self._pos_anim.stop()
         try:
             self._opacity_anim.finished.disconnect(self._on_dismissed)
         except (RuntimeError, TypeError):
             pass
-
-        self._input.clear()
-        self._steps.clear_steps()
-        self._current_step_id = None
 
         target = self._center_pos()
         start = QPoint(target.x(), target.y() + 20)
@@ -379,7 +486,17 @@ class OverlayWindow(QWidget):
         text = self._input.text().strip()
         if text:
             self._input.clear()
+            # Clear log so the new conversation starts fresh
+            self._steps.clear_steps()
+            self._current_step_id = None
             self.instruction_submitted.emit(text)
+
+    def _on_new_chat(self) -> None:
+        """Clear step log and reset input for a brand-new conversation."""
+        self._steps.clear_steps()
+        self._current_step_id = None
+        self._input.clear()
+        self._input.setFocus()
 
     def _on_dismissed(self) -> None:
         try:

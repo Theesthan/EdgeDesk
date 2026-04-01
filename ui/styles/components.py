@@ -14,7 +14,7 @@ from PyQt6.QtCore import (  # type: ignore[attr-defined]
     pyqtProperty,
     pyqtSignal,
 )
-from PyQt6.QtGui import QBrush, QColor, QPainter
+from PyQt6.QtGui import QBrush, QColor, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QFrame,
@@ -187,11 +187,65 @@ class ToggleSwitch(QAbstractButton):
         p.end()
 
 
+# ── SpinnerIcon ───────────────────────────────────────────────────────────────
+
+
+class SpinnerIcon(QWidget):
+    """16×16 icon widget that smoothly rotates when spinning is active."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setFixedSize(16, 16)
+        self._pixmap: QPixmap | None = None
+        self.__angle: float = 0.0
+
+        self._anim = QPropertyAnimation(self, b"spin_angle", self)
+        self._anim.setDuration(900)
+        self._anim.setStartValue(0.0)
+        self._anim.setEndValue(360.0)
+        self._anim.setLoopCount(-1)
+        self._anim.setEasingCurve(QEasingCurve.Type.Linear)
+
+    @pyqtProperty(float)  # type: ignore[override]
+    def spin_angle(self) -> float:
+        return self.__angle
+
+    @spin_angle.setter  # type: ignore[override, no-redef]
+    def spin_angle(self, v: float) -> None:
+        self.__angle = v % 360.0
+        self.update()
+
+    def set_pixmap(self, pixmap: QPixmap) -> None:
+        self._pixmap = pixmap
+        self.update()
+
+    def start_spin(self) -> None:
+        self._anim.start()
+
+    def stop_spin(self) -> None:
+        self._anim.stop()
+        self.__angle = 0.0
+        self.update()
+
+    def paintEvent(self, _event: object) -> None:  # type: ignore[override]
+        if self._pixmap is None:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        if self.__angle != 0.0:
+            p.translate(8.0, 8.0)
+            p.rotate(self.__angle)
+            p.translate(-8.0, -8.0)
+        p.drawPixmap(0, 0, self._pixmap)
+        p.end()
+
+
 # ── StepPill ─────────────────────────────────────────────────────────────────
 
 
 class StepPill(QWidget):
-    """Single agent-step entry: icon + text label + status dot."""
+    """Single agent-step entry: spinner icon + text label + status dot."""
 
     def __init__(
         self, text: str = "", status: str = "pending", parent: QWidget | None = None
@@ -201,12 +255,12 @@ class StepPill(QWidget):
         layout.setContentsMargins(SPACE_2, SPACE_2, SPACE_2, SPACE_2)
         layout.setSpacing(SPACE_2)
 
-        self._icon_lbl = QLabel(self)
-        self._icon_lbl.setFixedSize(16, 16)
+        self._icon = SpinnerIcon(self)
         self._text_lbl = QLabel(text, self)
+        self._text_lbl.setWordWrap(True)
         self._dot = StatusDot(parent=self)
 
-        layout.addWidget(self._icon_lbl)
+        layout.addWidget(self._icon)
         layout.addWidget(self._text_lbl, 1)
         layout.addWidget(self._dot)
 
@@ -221,7 +275,11 @@ class StepPill(QWidget):
         self._dot.set_pulse(status == "running")
         self._text_lbl.setStyleSheet(f"color: {color};")
         if _QTA:
-            self._icon_lbl.setPixmap(qta.icon(icon_name, color=color).pixmap(16, 16))
+            self._icon.set_pixmap(qta.icon(icon_name, color=color).pixmap(16, 16))
+        if status == "running":
+            self._icon.start_spin()
+        else:
+            self._icon.stop_spin()
         bg = BG_ELEVATED if status != "pending" else "transparent"
         self.setStyleSheet(f"StepPill {{ background: {bg}; border-radius: {RADIUS_MD}px; }}")
 

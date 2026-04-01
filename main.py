@@ -134,6 +134,13 @@ async def _async_main(app: Any) -> None:  # app: QApplication
             _run_instruction(instr, overlay, orchestrator, session_factory)
         )
     )
+    overlay.open_rules_requested.connect(
+        lambda: asyncio.ensure_future(_show_rules(rule_win, rule_panel, session_factory))
+    )
+    overlay.open_history_requested.connect(
+        lambda: asyncio.ensure_future(_show_history(hist_win, hist_view, session_factory, 0))
+    )
+    overlay.open_settings_requested.connect(lambda: _show_settings(hotkey_mgr, session_factory))
 
     rule_panel.rule_saved.connect(
         lambda data: asyncio.ensure_future(
